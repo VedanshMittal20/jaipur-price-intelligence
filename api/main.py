@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from api.schemas import (
+    CounterfactualResponse,
     DealSummary,
     LocalitySummary,
     ModelMetaResponse,
@@ -90,6 +91,15 @@ def predict_price(
 ):
     """Predict fair asking price with 80% conformal interval and exact factor breakdown."""
     return service.predict_property(request)
+
+
+@app.post("/counterfactual", response_model=CounterfactualResponse, tags=["Inference"])
+def evaluate_counterfactuals(
+    request: PropertyRequest,
+    service: ModelService = Depends(get_service),
+):
+    """Evaluate hypothetical what-if property modifications against baseline fair value."""
+    return service.compute_counterfactuals(request)
 
 
 # Mount static production web app if built

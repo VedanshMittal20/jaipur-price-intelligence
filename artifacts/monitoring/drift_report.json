@@ -1,0 +1,49 @@
+{
+  "status": "ALERT_RETRAIN_REQUIRED",
+  "features_audited": 7,
+  "features_flagged": 6,
+  "metrics": {
+    "area_sqft": {
+      "psi": 0.3187,
+      "status": "SIGNIFICANT_DRIFT",
+      "ref_mean": 1275.7221423662274,
+      "cur_mean": 1408.0188290666665
+    },
+    "bhk": {
+      "psi": 0.1008,
+      "status": "MODERATE_DRIFT",
+      "ref_mean": 2.3568694172692473,
+      "cur_mean": 2.660377358490566
+    },
+    "dist_metro_m": {
+      "psi": 5.2928,
+      "status": "SIGNIFICANT_DRIFT",
+      "ref_mean": 3799.0405057003586,
+      "cur_mean": 5203.462626560161
+    },
+    "dist_cbd_m": {
+      "psi": 4.4496,
+      "status": "SIGNIFICANT_DRIFT",
+      "ref_mean": 3298.890950929321,
+      "cur_mean": 3967.820424558321
+    },
+    "dist_primary_road_m": {
+      "psi": 1.0786,
+      "status": "SIGNIFICANT_DRIFT",
+      "ref_mean": 1099.7381549917438,
+      "cur_mean": 2918.963695902686
+    },
+    "dlc_rate_per_sqm": {
+      "psi": 5.002,
+      "status": "SIGNIFICANT_DRIFT",
+      "ref_mean": 33845.172267120375,
+      "cur_mean": 32522.01257861635
+    },
+    "log_price": {
+      "psi": 0.2937,
+      "status": "SIGNIFICANT_DRIFT",
+      "ref_mean": 15.475712668550596,
+      "cur_mean": 15.492553432546892
+    }
+  }
+}

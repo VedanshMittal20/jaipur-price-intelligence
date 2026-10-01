@@ -31,6 +31,21 @@ export interface GroupFactor {
   direction: 'positive' | 'negative';
 }
 
+export interface CounterfactualScenario {
+  scenario_id: string;
+  title: string;
+  description: string;
+  new_estimate_inr: number;
+  new_estimate_ppsf: number;
+  delta_inr: number;
+  delta_pct: number;
+}
+
+export interface CounterfactualResponse {
+  baseline_estimate_inr: number;
+  scenarios: CounterfactualScenario[];
+}
+
 export interface PricePredictionResponse {
   estimate_inr: number;
   estimate_ppsf: number;

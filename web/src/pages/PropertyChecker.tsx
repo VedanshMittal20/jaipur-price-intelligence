@@ -5,8 +5,13 @@ import {
   Sparkles,
   MapPin,
 } from 'lucide-react';
-import { LocalitySummary, PricePredictionResponse, PropertyRequest } from '../types/api';
-import { fetchLocalities, predictPrice } from '../api/client';
+import {
+  CounterfactualScenario,
+  LocalitySummary,
+  PricePredictionResponse,
+  PropertyRequest,
+} from '../types/api';
+import { fetchCounterfactuals, fetchLocalities, predictPrice } from '../api/client';
 import { formatINR, formatPPSF, formatNumber } from '../lib/format';
 import { FactorChart } from '../components/FactorChart';
 
@@ -41,6 +46,7 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PricePredictionResponse | null>(null);
+  const [counterfactuals, setCounterfactuals] = useState<CounterfactualScenario[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch localities on mount
@@ -87,11 +93,26 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
     try {
       const pred = await predictPrice(dataToSubmit);
       setResult(pred);
+      const cf = await fetchCounterfactuals(dataToSubmit).catch(() => null);
+      if (cf) setCounterfactuals(cf.scenarios);
     } catch (err: any) {
       setError(err.message || 'Valuation failed. Check your inputs.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyScenario = (cf: CounterfactualScenario) => {
+    const updated = { ...formData };
+    if (cf.scenario_id === 'furnishing_upgrade') updated.furnishing = 'Furnished';
+    if (cf.scenario_id === 'add_bathroom') updated.bathrooms = (updated.bathrooms || updated.bhk) + 1;
+    if (cf.scenario_id === 'expand_area') updated.area_sqft = updated.area_sqft + 200;
+    if (cf.scenario_id === 'possession_ready') updated.possession_status = 'Ready to Move';
+    if (cf.scenario_id === 'rera_sanction') updated.rera_flag = 1;
+    if (cf.scenario_id === 'mid_floor') updated.floor = 3;
+
+    setFormData(updated);
+    handleValuation(updated);
   };
 
   // Initial prediction on load once localities are ready
@@ -411,6 +432,64 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
 
               {/* Exact TreeSHAP Multiplicative Factor Decomposition */}
               <FactorChart factors={result.factors} groups={result.groups} />
+
+              {/* What-If Counterfactual Value Simulator */}
+              {counterfactuals.length > 0 && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
+                        <Sparkles className="w-4 h-4 text-brand-600" />
+                        <span>What-If Valuation Simulator</span>
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Simulate value changes under hypothetical upgrades or physical modifications
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {counterfactuals.map((cf) => {
+                      const isPos = cf.delta_inr >= 0;
+                      return (
+                        <div
+                          key={cf.scenario_id}
+                          className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-semibold text-xs text-slate-800">{cf.title}</span>
+                              <span
+                                className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${
+                                  isPos ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                                }`}
+                              >
+                                {isPos ? '+' : ''}{formatINR(cf.delta_inr, true)} ({cf.delta_pct >= 0 ? '+' : ''}{cf.delta_pct.toFixed(1)}%)
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 leading-tight mb-2.5">
+                              {cf.description}
+                            </p>
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                            <span className="text-[11px] text-slate-600 font-mono">
+                              New: {formatINR(cf.new_estimate_inr, true)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => applyScenario(cf)}
+                              className="text-[11px] font-bold text-brand-600 hover:text-brand-700 hover:underline"
+                            >
+                              Apply scenario &rarr;
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

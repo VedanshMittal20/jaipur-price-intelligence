@@ -59,6 +59,23 @@ class GroupFactor(BaseModel):
     direction: str  # 'positive' or 'negative'
 
 
+class CounterfactualScenario(BaseModel):
+    """Estimated value shift under a hypothetical property modification."""
+    scenario_id: str
+    title: str
+    description: str
+    new_estimate_inr: float
+    new_estimate_ppsf: float
+    delta_inr: float
+    delta_pct: float
+
+
+class CounterfactualResponse(BaseModel):
+    """Collection of what-if counterfactual scenario valuations."""
+    baseline_estimate_inr: float
+    scenarios: List[CounterfactualScenario]
+
+
 class PricePredictionResponse(BaseModel):
     """Complete price intelligence estimate with calibrated interval and exact factor breakdown."""
     estimate_inr: float

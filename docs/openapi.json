@@ -167,10 +167,118 @@
           }
         }
       }
+    },
+    "/counterfactual": {
+      "post": {
+        "tags": [
+          "Inference"
+        ],
+        "summary": "Evaluate Counterfactuals",
+        "description": "Evaluate hypothetical what-if property modifications against baseline fair value.",
+        "operationId": "evaluate_counterfactuals_counterfactual_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CounterfactualResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "CounterfactualResponse": {
+        "properties": {
+          "baseline_estimate_inr": {
+            "type": "number",
+            "title": "Baseline Estimate Inr"
+          },
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/CounterfactualScenario"
+            },
+            "type": "array",
+            "title": "Scenarios"
+          }
+        },
+        "type": "object",
+        "required": [
+          "baseline_estimate_inr",
+          "scenarios"
+        ],
+        "title": "CounterfactualResponse",
+        "description": "Collection of what-if counterfactual scenario valuations."
+      },
+      "CounterfactualScenario": {
+        "properties": {
+          "scenario_id": {
+            "type": "string",
+            "title": "Scenario Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "new_estimate_inr": {
+            "type": "number",
+            "title": "New Estimate Inr"
+          },
+          "new_estimate_ppsf": {
+            "type": "number",
+            "title": "New Estimate Ppsf"
+          },
+          "delta_inr": {
+            "type": "number",
+            "title": "Delta Inr"
+          },
+          "delta_pct": {
+            "type": "number",
+            "title": "Delta Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenario_id",
+          "title",
+          "description",
+          "new_estimate_inr",
+          "new_estimate_ppsf",
+          "delta_inr",
+          "delta_pct"
+        ],
+        "title": "CounterfactualScenario",
+        "description": "Estimated value shift under a hypothetical property modification."
+      },
       "DealSummary": {
         "properties": {
           "listing_id": {

@@ -1,4 +1,5 @@
 import {
+  CounterfactualResponse,
   DealSummary,
   LocalitySummary,
   ModelMetaResponse,
@@ -46,3 +47,19 @@ export async function fetchModelMeta(): Promise<ModelMetaResponse> {
   }
   return resp.json();
 }
+
+export async function fetchCounterfactuals(req: PropertyRequest): Promise<CounterfactualResponse> {
+  const resp = await fetch(`${API_BASE}/counterfactual`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json().catch(() => ({ detail: 'Counterfactual request failed' }));
+    throw new Error(errorData.detail || `Server returned ${resp.status}`);
+  }
+
+  return resp.json();
+}
+

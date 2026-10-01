@@ -139,3 +139,30 @@ def test_predict_rejects_unresolvable_locality_and_coords(client):
     }
     resp = client.post("/predict", json=payload)
     assert resp.status_code == 400
+
+
+def test_counterfactual_endpoint(client):
+    """POST /counterfactual returns valid scenarios with delta values."""
+    payload = {
+        "area_sqft": 1400.0,
+        "bhk": 3,
+        "bathrooms": 2,
+        "locality": "Mansarovar",
+        "property_type": "Apartment",
+        "furnishing": "Semi-Furnished",
+        "possession_status": "Ready to Move",
+        "floor": 1,
+    }
+    resp = client.post("/counterfactual", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+
+    assert data["baseline_estimate_inr"] > 1_000_000
+    assert len(data["scenarios"]) >= 3
+    for s in data["scenarios"]:
+        assert "scenario_id" in s
+        assert "title" in s
+        assert "delta_inr" in s
+        assert "delta_pct" in s
+        assert s["new_estimate_inr"] > 0
+

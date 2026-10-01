@@ -203,7 +203,7 @@ class FeaturePipeline:
         # 4. Categoricals: encode as integer category codes
         for col in CATEGORICAL_COLS:
             vocab = self.categories_.get(col, [])
-            val_series = df[col].astype(str)
+            val_series = df[col].astype(str).str.lower().str.replace(" ", "_").str.replace("-", "_")
             cat_type = pd.CategoricalDtype(categories=vocab, ordered=False)
             out[col] = val_series.astype(cat_type).cat.codes.astype(int)
 

@@ -12,6 +12,8 @@ import pandas as pd
 from fastapi import HTTPException
 
 from api.schemas import (
+    CounterfactualResponse,
+    CounterfactualScenario,
     DealSummary,
     FeatureFactor,
     GroupFactor,
@@ -148,10 +150,10 @@ class ModelService:
             "bathrooms": float(req.bathrooms if req.bathrooms is not None else req.bhk),
             "floor": float(req.floor if req.floor is not None else 1.0),
             "rera_flag": bool(req.rera_flag),
-            "property_type": req.property_type,
-            "furnishing": req.furnishing,
-            "possession_status": req.possession_status,
-            "posted_by": req.posted_by,
+            "property_type": req.property_type.strip().lower().replace(" ", "_").replace("-", "_"),
+            "furnishing": req.furnishing.strip().lower().replace(" ", "_").replace("-", "_"),
+            "possession_status": req.possession_status.strip().lower().replace(" ", "_").replace("-", "_"),
+            "posted_by": req.posted_by.strip().lower().replace(" ", "_").replace("-", "_"),
             "locality_id": loc_id,
             "coord_precision": precision,
             "lat": lat,
@@ -218,6 +220,94 @@ class ModelService:
             dlc_rate_per_sqm=dlc_val,
             factors=factors,
             groups=groups,
+        )
+
+    def compute_counterfactuals(self, req: PropertyRequest) -> CounterfactualResponse:
+        """Evaluate hypothetical what-if property modifications against baseline."""
+        baseline_pred = self.predict_property(req)
+        baseline_val = baseline_pred.estimate_inr
+
+        scenarios_to_test = []
+
+        # 1. Furnishing Upgrade
+        if req.furnishing != "Furnished":
+            scenarios_to_test.append({
+                "id": "furnishing_upgrade",
+                "title": "Full Turnkey Furnishing",
+                "desc": "Upgrade interior woodwork and furnishings to fully furnished state.",
+                "updates": {"furnishing": "Furnished"}
+            })
+
+        # 2. Add extra bathroom
+        current_baths = req.bathrooms if req.bathrooms is not None else req.bhk
+        scenarios_to_test.append({
+            "id": "add_bathroom",
+            "title": "Additional Bathroom",
+            "desc": f"Add an extra bathroom to the layout ({int(current_baths)} -> {int(current_baths + 1)}).",
+            "updates": {"bathrooms": current_baths + 1}
+        })
+
+        # 3. Add 200 sq ft Area
+        scenarios_to_test.append({
+            "id": "expand_area",
+            "title": "Built-up Area Expansion (+200 sq ft)",
+            "desc": f"Expand total usable space from {int(req.area_sqft)} to {int(req.area_sqft + 200)} sq ft.",
+            "updates": {"area_sqft": req.area_sqft + 200.0}
+        })
+
+        # 4. Ready to move possession
+        if req.possession_status != "Ready to Move":
+            scenarios_to_test.append({
+                "id": "possession_ready",
+                "title": "Ready to Move Completion",
+                "desc": "Eliminate under-construction delay risk and obtain occupancy certificate.",
+                "updates": {"possession_status": "Ready to Move"}
+            })
+
+        # 5. RERA Sanction
+        if req.rera_flag == 0:
+            scenarios_to_test.append({
+                "id": "rera_sanction",
+                "title": "RERA Registration Sanction",
+                "desc": "Formalize project approval under Rajasthan RERA authority.",
+                "updates": {"rera_flag": 1}
+            })
+
+        # 6. Floor Elevation
+        current_floor = req.floor if req.floor is not None else 1
+        if current_floor < 3:
+            scenarios_to_test.append({
+                "id": "mid_floor",
+                "title": "Mid-Level Elevation (Floor 3)",
+                "desc": "Elevate to mid-floor level away from ground noise and dust.",
+                "updates": {"floor": 3}
+            })
+
+        scenario_results = []
+        for s in scenarios_to_test:
+            mod_data = req.model_dump()
+            mod_data.update(s["updates"])
+            mod_req = PropertyRequest(**mod_data)
+            mod_pred = self.predict_property(mod_req)
+
+            diff_inr = mod_pred.estimate_inr - baseline_val
+            diff_pct = (diff_inr / baseline_val) * 100.0
+
+            scenario_results.append(
+                CounterfactualScenario(
+                    scenario_id=s["id"],
+                    title=s["title"],
+                    description=s["desc"],
+                    new_estimate_inr=mod_pred.estimate_inr,
+                    new_estimate_ppsf=mod_pred.estimate_ppsf,
+                    delta_inr=diff_inr,
+                    delta_pct=diff_pct,
+                )
+            )
+
+        return CounterfactualResponse(
+            baseline_estimate_inr=baseline_val,
+            scenarios=scenario_results,
         )
 
     def _init_localities_cache(self, df_clean: pd.DataFrame):

@@ -73,3 +73,5 @@
 | **DOC2** | DONE | `docs/CASE_STUDY.md` | Deep-dive technical engineering case study |
 | **DOC3** | DONE | `README.md` | Root documentation with Mermaid diagram & quickstart |
 | **GATE G7** | **PASSED** | End-to-end platform, model card, case study, CI verified | Platform Complete & Production Ready |
+| **GH-SYNC** | DONE | [GitHub Repo](https://github.com/VedanshMittal20/jaipur-price-intelligence) | Public GitHub repo pushed with full commit history |
+| **AUTOMATION** | DONE | `.github/workflows/daily-maintenance.yml`, `task-566` | Daily maintenance CI and autonomous agent cron active |

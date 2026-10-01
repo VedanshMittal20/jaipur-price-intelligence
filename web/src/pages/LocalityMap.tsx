@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { LocalitySummary } from '../types/api';
-import { fetchLocalities } from '../api/client';
+import { LocalityInsightResponse, LocalitySummary } from '../types/api';
+import { fetchLocalities, fetchLocalityInsight } from '../api/client';
 import { formatINR, formatPPSF, formatNumber } from '../lib/format';
-import { MapPin, Search, ArrowRight } from 'lucide-react';
+import { MapPin, Search, ArrowRight, Sparkles } from 'lucide-react';
 
 interface LocalityMapProps {
   onSelectLocality: (name: string) => void;
@@ -16,6 +16,8 @@ export const LocalityMap: React.FC<LocalityMapProps> = ({ onSelectLocality }) =>
 
   const [localities, setLocalities] = useState<LocalitySummary[]>([]);
   const [selectedLocality, setSelectedLocality] = useState<LocalitySummary | null>(null);
+  const [insight, setInsight] = useState<LocalityInsightResponse | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [tierFilter, setTierFilter] = useState<'all' | 'budget' | 'mid' | 'premium' | 'luxury'>('all');
 
@@ -41,6 +43,21 @@ export const LocalityMap: React.FC<LocalityMapProps> = ({ onSelectLocality }) =>
       })
       .catch((err) => console.error(err));
   }, []);
+
+  useEffect(() => {
+    if (!selectedLocality) {
+      setInsight(null);
+      return;
+    }
+    setInsightLoading(true);
+    fetchLocalityInsight(selectedLocality.locality_id)
+      .then((data) => setInsight(data))
+      .catch((err) => {
+        console.error('Failed to fetch locality insight:', err);
+        setInsight(null);
+      })
+      .finally(() => setInsightLoading(false));
+  }, [selectedLocality]);
 
   // Initialize Map
   useEffect(() => {
@@ -240,6 +257,49 @@ export const LocalityMap: React.FC<LocalityMapProps> = ({ onSelectLocality }) =>
                 </div>
               </div>
 
+              {/* Grounded Autonomous Insights */}
+              {insightLoading && (
+                <div className="py-2 text-center text-xs text-brand-300 animate-pulse">
+                  Computing grounded micro-market intelligence...
+                </div>
+              )}
+
+              {insight && !insightLoading && (
+                <div className="pt-3 border-t border-brand-800/70 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center space-x-1 text-amber-300 font-semibold">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Grounded Intelligence</span>
+                    </span>
+                    {insight.market_to_dlc_ratio && (
+                      <span className="bg-brand-800/90 text-amber-200 text-[11px] px-2 py-0.5 rounded-full font-mono border border-brand-700/60">
+                        {insight.market_to_dlc_ratio.toFixed(2)}x DLC Circle Rate
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-slate-300 text-xs leading-relaxed font-sans">
+                    {insight.narrative}
+                  </p>
+
+                  {insight.key_drivers.length > 0 && (
+                    <div className="pt-1 space-y-1">
+                      <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                        Key Price Drivers
+                      </div>
+                      <ul className="space-y-1">
+                        {insight.key_drivers.map((driver, idx) => (
+                          <li key={idx} className="flex items-start space-x-1.5 text-slate-300 text-xs">
+                            <span className="text-emerald-400 font-bold">•</span>
+                            <span>{driver}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={() => onSelectLocality(selectedLocality.name)}
                 className="w-full mt-2 flex items-center justify-center space-x-1.5 bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition-all shadow-sm"
@@ -251,7 +311,7 @@ export const LocalityMap: React.FC<LocalityMapProps> = ({ onSelectLocality }) =>
           )}
 
           {/* Localities Scroll Area */}
-          <div className="max-h-[380px] overflow-y-auto space-y-2 pr-1">
+          <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
             {localities
               .filter((loc) => loc.name.toLowerCase().includes(searchQuery.toLowerCase()))
               .map((loc) => {

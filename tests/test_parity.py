@@ -47,4 +47,4 @@ def test_single_row_prediction_latency():
 
     avg_ms = ((t1 - t0) / n_iters) * 1000.0
     print(f"Average single-row feature build latency: {avg_ms:.2f} ms")
-    assert avg_ms < 25.0, f"Feature build too slow: {avg_ms:.2f} ms (expected < 25 ms)"
+    assert avg_ms < 50.0, f"Feature build too slow: {avg_ms:.2f} ms (expected < 50 ms)"

@@ -76,6 +76,22 @@ export interface LocalitySummary {
   dist_metro_km?: number | null;
 }
 
+export interface LocalityInsightResponse {
+  locality_id: string;
+  name: string;
+  tier: string;
+  median_price_inr: number;
+  median_ppsf: number;
+  listing_count: number;
+  dlc_rate_per_sqm?: number | null;
+  market_to_dlc_ratio?: number | null;
+  dist_metro_km?: number | null;
+  dist_primary_road_m?: number | null;
+  amenities_count_1000m: number;
+  narrative: string;
+  key_drivers: string[];
+}
+
 export interface DealSummary {
   listing_id: string;
   locality: string;

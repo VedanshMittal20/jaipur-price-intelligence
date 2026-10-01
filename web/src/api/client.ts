@@ -1,6 +1,7 @@
 import {
   CounterfactualResponse,
   DealSummary,
+  LocalityInsightResponse,
   LocalitySummary,
   ModelMetaResponse,
   PricePredictionResponse,
@@ -63,3 +64,10 @@ export async function fetchCounterfactuals(req: PropertyRequest): Promise<Counte
   return resp.json();
 }
 
+export async function fetchLocalityInsight(localityId: string): Promise<LocalityInsightResponse> {
+  const resp = await fetch(`${API_BASE}/localities/${encodeURIComponent(localityId)}/insight`);
+  if (!resp.ok) {
+    throw new Error(`Failed to fetch insight for ${localityId} (${resp.status})`);
+  }
+  return resp.json();
+}

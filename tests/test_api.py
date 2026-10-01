@@ -166,3 +166,21 @@ def test_counterfactual_endpoint(client):
         assert "delta_pct" in s
         assert s["new_estimate_inr"] > 0
 
+
+def test_locality_insight_endpoint(client):
+    """GET /localities/{id}/insight returns grounded narrative and key drivers."""
+    resp = client.get("/localities/mansarovar/insight")
+    assert resp.status_code == 200
+    data = resp.json()
+
+    assert data["name"] == "Mansarovar"
+    assert "tier" in data
+    assert "narrative" in data
+    assert len(data["key_drivers"]) >= 2
+    assert data["listing_count"] > 10
+
+    # Non-existent locality returns 404
+    resp_404 = client.get("/localities/non_existent_micro_market_xyz/insight")
+    assert resp_404.status_code == 404
+
+

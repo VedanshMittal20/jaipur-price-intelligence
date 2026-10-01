@@ -1,0 +1,15 @@
+# Render.com Blueprint for 1-Click Deployment
+# Free Web Service (512 MB RAM, 0.1 CPU, zero database required per ADR-1)
+
+services:
+  - type: web
+    name: jaipur-price-intelligence
+    env: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 8000

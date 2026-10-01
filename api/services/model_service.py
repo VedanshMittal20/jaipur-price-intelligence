@@ -17,6 +17,7 @@ from api.schemas import (
     DealSummary,
     FeatureFactor,
     GroupFactor,
+    LocalityInsightResponse,
     LocalitySummary,
     ModelMetaResponse,
     PricePredictionResponse,
@@ -74,10 +75,13 @@ class ModelService:
             with open(metrics_path, "r", encoding="utf-8") as f:
                 self.metrics = json.load(f)
 
-        # 7. Precompute Localities and Deals from clean listings
+        # 7. Precompute Localities, Insights, and Deals from clean listings
         clean_path = DATA / "processed" / "listings_clean.parquet"
+        feat_path = DATA / "processed" / "features.parquet"
         self.localities_cache: List[LocalitySummary] = []
         self.deals_cache: List[DealSummary] = []
+        self.insights_cache: Dict[str, LocalityInsightResponse] = {}
+        self.df_feat: pd.DataFrame = pd.read_parquet(feat_path) if feat_path.exists() else pd.DataFrame()
 
         if clean_path.exists():
             df_clean = pd.read_parquet(clean_path)
@@ -345,8 +349,86 @@ class ModelService:
                 )
             )
 
+            # Compute Grounded Locality Insight
+            if med_ppsf < 3500:
+                tier = "Budget Growth Corridor"
+            elif med_ppsf < 5000:
+                tier = "Established Mid-Segment"
+            elif med_ppsf < 7000:
+                tier = "High-Demand Premium"
+            else:
+                tier = "Ultra-Prime Core"
+
+            ratio = None
+            if dlc_rate and dlc_rate > 0:
+                market_rate_sqm = med_ppsf * 10.7639
+                ratio = round(market_rate_sqm / dlc_rate, 2)
+
+            metro_km = None
+            road_m = None
+            amenities_cnt = 0
+            if not self.df_feat.empty and "locality_id" in self.df_feat.columns:
+                sub_feat = self.df_feat[self.df_feat["locality_id"] == loc_id]
+                if not sub_feat.empty:
+                    if "dist_metro_m" in sub_feat.columns:
+                        metro_km = round(float(sub_feat["dist_metro_m"].median() / 1000.0), 2)
+                    if "dist_primary_road_m" in sub_feat.columns:
+                        road_m = round(float(sub_feat["dist_primary_road_m"].median()), 0)
+                    amenities_cnt = int(
+                        float(sub_feat.get("n_school_1000m", pd.Series([0])).median()) +
+                        float(sub_feat.get("n_hospital_1000m", pd.Series([0])).median()) +
+                        float(sub_feat.get("n_shop_1000m", pd.Series([0])).median())
+                    )
+
+            drivers = [
+                f"Median valuation: ₹{med_price/100_000:.1f} Lakh (₹{int(med_ppsf):,}/sq ft) across {c} market listings",
+            ]
+            if ratio:
+                drivers.append(f"Trades at {ratio:.2f}x government statutory DLC circle rate (₹{int(dlc_rate):,}/sq m)")
+            if metro_km is not None:
+                drivers.append(f"Positioned {metro_km} km from the nearest Jaipur Metro line")
+            if amenities_cnt > 0:
+                drivers.append(f"{amenities_cnt} verified local schools, hospitals, and retail amenities within 1,000m")
+
+            name_title = str(loc_id).replace("_", " ").title()
+            ratio_text = f", trading at a {ratio:.2f}x multiplier against official Rajasthan DLC circle rates" if ratio else ""
+            metro_text = f" Positioned within {metro_km} km of the metro network with {amenities_cnt} local neighborhood amenities." if metro_km else ""
+            narrative = (
+                f"{name_title} is categorized as an {tier} residential hub with a median asking price of "
+                f"₹{med_price/100_000:.1f} Lakh (₹{int(med_ppsf):,}/sq ft){ratio_text}.{metro_text}"
+            )
+
+            self.insights_cache[str(loc_id).lower()] = LocalityInsightResponse(
+                locality_id=str(loc_id),
+                name=name_title,
+                tier=tier,
+                median_price_inr=med_price,
+                median_ppsf=med_ppsf,
+                listing_count=c,
+                dlc_rate_per_sqm=dlc_rate,
+                market_to_dlc_ratio=ratio,
+                dist_metro_km=metro_km,
+                dist_primary_road_m=road_m,
+                amenities_count_1000m=amenities_cnt,
+                narrative=narrative,
+                key_drivers=drivers,
+            )
+
         summaries.sort(key=lambda x: x.listing_count, reverse=True)
         self.localities_cache = summaries
+
+    def get_locality_insight(self, locality_id: str) -> LocalityInsightResponse:
+        """Retrieve grounded narrative intelligence for a specific micro-market."""
+        norm = self._normalize_locality(locality_id)
+        if norm in self.insights_cache:
+            return self.insights_cache[norm]
+        for k, insight in self.insights_cache.items():
+            if k in norm or norm in k:
+                return insight
+        raise HTTPException(
+            status_code=404,
+            detail=f"Locality '{locality_id}' not found in analyzed micro-markets.",
+        )
 
     def _init_deals_cache(self, df_clean: pd.DataFrame):
         """Find listings priced >= 15% below predicted fair value."""

@@ -108,6 +108,23 @@ class LocalitySummary(BaseModel):
     dist_metro_km: Optional[float] = None
 
 
+class LocalityInsightResponse(BaseModel):
+    """Grounded micro-market intelligence narrative derived purely from computed statistics."""
+    locality_id: str
+    name: str
+    tier: str
+    median_price_inr: float
+    median_ppsf: float
+    listing_count: int
+    dlc_rate_per_sqm: Optional[float] = None
+    market_to_dlc_ratio: Optional[float] = None
+    dist_metro_km: Optional[float] = None
+    dist_primary_road_m: Optional[float] = None
+    amenities_count_1000m: int
+    narrative: str
+    key_drivers: List[str]
+
+
 class DealSummary(BaseModel):
     """Detected market listing priced below algorithmic fair valuation."""
     listing_id: str

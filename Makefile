@@ -24,6 +24,12 @@ web:
 test:
 	pytest -q --cov=src --cov=api
 
+drift:
+	python -m jpi.monitoring.drift
+
+smoke:
+	python scripts/smoke_test.py
+
 lint:
 	ruff check . && ruff format --check .
 

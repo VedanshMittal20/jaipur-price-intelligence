@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from api.schemas import (
     CounterfactualResponse,
     DealSummary,
+    LocalityInsightResponse,
     LocalitySummary,
     ModelMetaResponse,
     PricePredictionResponse,
@@ -73,6 +74,15 @@ def get_model_metadata(service: ModelService = Depends(get_service)):
 def list_localities(service: ModelService = Depends(get_service)):
     """List all canonical Jaipur residential micro-markets with coordinates, medians, and DLC rates."""
     return service.get_localities()
+
+
+@app.get("/localities/{locality_id}/insight", response_model=LocalityInsightResponse, tags=["Geospatial"])
+def get_locality_insight(
+    locality_id: str,
+    service: ModelService = Depends(get_service),
+):
+    """Retrieve grounded analytical micro-market narrative derived from empirical statistics."""
+    return service.get_locality_insight(locality_id)
 
 
 @app.get("/deals", response_model=List[DealSummary], tags=["Intelligence"])

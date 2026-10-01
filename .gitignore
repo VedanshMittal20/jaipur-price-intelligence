@@ -69,3 +69,4 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+server.log

@@ -4,6 +4,9 @@ import {
   Loader2,
   Sparkles,
   MapPin,
+  Download,
+  Share2,
+  Check,
 } from 'lucide-react';
 import {
   CounterfactualScenario,
@@ -48,6 +51,78 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
   const [result, setResult] = useState<PricePredictionResponse | null>(null);
   const [counterfactuals, setCounterfactuals] = useState<CounterfactualScenario[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // Parse URL search parameters on initial mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const locParam = params.get('locality');
+    const areaParam = params.get('area');
+    const bhkParam = params.get('bhk');
+    if (locParam || areaParam || bhkParam) {
+      setFormData((prev) => ({
+        ...prev,
+        ...(locParam ? { locality: locParam } : {}),
+        ...(areaParam ? { area_sqft: Number(areaParam) } : {}),
+        ...(bhkParam ? { bhk: Number(bhkParam), bathrooms: Number(bhkParam) } : {}),
+      }));
+    }
+  }, []);
+
+  const handleExportJSON = () => {
+    if (!result) return;
+    const report = {
+      platform: 'Jaipur Real Estate Price Intelligence Platform v2.0',
+      generated_at: new Date().toISOString(),
+      property_specification: formData,
+      valuation: {
+        estimated_price_inr: result.estimate_inr,
+        unit_rate_ppsf: result.estimate_ppsf,
+        typical_baseline_inr: result.typical_price_inr,
+        conformal_80_interval: {
+          low_inr: result.interval_low_inr,
+          high_inr: result.interval_high_inr,
+          low_ppsf: result.interval_low_ppsf,
+          high_ppsf: result.interval_high_ppsf,
+          confidence_method: '80% Calibrated Mondrian Conformal',
+        },
+        dlc_floor_rate_per_sqm: result.dlc_rate_per_sqm,
+      },
+      factor_contributions: result.factors.map((f) => ({
+        feature: f.label,
+        feature_name: f.feature,
+        value: f.value,
+        multiplicative_multiplier: f.multiplier,
+        percentage_impact: f.pct_impact,
+      })),
+      provenance: {
+        model: 'LightGBM Gradient Boosted Trees v2.0.0',
+        spatial_holdout_r2: 0.766,
+        test_mape: 0.2513,
+      },
+    };
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `jaipur-valuation-${formData.locality.toLowerCase().replace(/\\s+/g, '-')}-${result.estimate_inr}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShareLink = () => {
+    const params = new URLSearchParams({
+      locality: formData.locality,
+      area: formData.area_sqft.toString(),
+      bhk: formData.bhk.toString(),
+      type: formData.property_type,
+    });
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   // Fetch localities on mount
   useEffect(() => {
@@ -367,14 +442,44 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
               <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 -mt-6 -mr-6 w-36 h-36 rounded-full bg-brand-500/10 blur-2xl pointer-events-none" />
 
-                <div className="flex items-center justify-between text-xs font-medium text-slate-300 uppercase tracking-wider mb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-slate-300 uppercase tracking-wider mb-2">
                   <span className="flex items-center space-x-1.5">
                     <MapPin className="w-3.5 h-3.5 text-brand-400" />
                     <span>{result.locality}</span>
                   </span>
-                  <span className="bg-slate-700/60 text-slate-200 px-2.5 py-1 rounded-full border border-slate-600 text-[11px]">
-                    {result.coord_precision === 'exact' ? 'Exact Coordinate Precision' : 'Locality Centroid Model'}
-                  </span>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={handleExportJSON}
+                      className="flex items-center space-x-1 bg-slate-800/90 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-full border border-slate-700 text-[11px] font-sans font-medium transition-all"
+                      title="Download Valuation Report (JSON)"
+                    >
+                      <Download className="w-3 h-3 text-brand-300" />
+                      <span>Export Report</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleShareLink}
+                      className="flex items-center space-x-1 bg-slate-800/90 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-full border border-slate-700 text-[11px] font-sans font-medium transition-all"
+                      title="Copy Shareable Valuation Link"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-400" />
+                          <span className="text-emerald-300">Link Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Share2 className="w-3 h-3 text-sky-300" />
+                          <span>Share Link</span>
+                        </>
+                      )}
+                    </button>
+                    <span className="hidden sm:inline-block bg-slate-700/60 text-slate-200 px-2.5 py-1 rounded-full border border-slate-600 text-[11px]">
+                      {result.coord_precision === 'exact' ? 'Exact Coords' : 'Locality Centroid'}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="mt-3">

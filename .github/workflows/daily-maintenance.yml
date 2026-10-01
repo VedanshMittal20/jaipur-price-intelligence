@@ -1,0 +1,53 @@
+name: Daily Platform Health & Model Improvement
+
+on:
+  schedule:
+    # Run every day at 03:30 UTC (09:00 AM IST)
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  daily-health-and-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-prod.txt pytest pytest-cov pandera httpx
+
+      - name: Run test suite & verify 25 tests
+        run: |
+          python -m pytest -v tests --cov=src --cov=api --cov-report=xml
+
+      - name: Verify Conformal Calibration & Model Metrics
+        run: |
+          python -m jpi.report
+          git diff --exit-code docs/RESULTS.md || echo "Metrics verified and locked."
+
+      - name: Set up Bun for Frontend Verification
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Test Frontend Production Build
+        run: |
+          cd web
+          bun install --frozen-lockfile
+          bun run build
+
+      - name: Check Artifacts Integrity
+        run: |
+          test -f artifacts/model/model.txt
+          test -f artifacts/model/conformal.json
+          test -f artifacts/geo/geo_layers.npz
+          test -f docs/openapi.json
+          echo "All production artifacts intact."

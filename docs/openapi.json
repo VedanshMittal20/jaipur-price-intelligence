@@ -1,0 +1,714 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Jaipur Real Estate Price Intelligence API",
+    "description": "Production ML API estimating fair asking prices for Jaipur residential properties, with calibrated Mondrian conformal intervals and exact multiplicative factor explanations.",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health Check",
+        "description": "Liveness and readiness health check.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meta/model": {
+      "get": {
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "Get Model Metadata",
+        "description": "Retrieve model training metadata, spatial CV metrics, and conformal coverage.",
+        "operationId": "get_model_metadata_meta_model_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelMetaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/localities": {
+      "get": {
+        "tags": [
+          "Geospatial"
+        ],
+        "summary": "List Localities",
+        "description": "List all canonical Jaipur residential micro-markets with coordinates, medians, and DLC rates.",
+        "operationId": "list_localities_localities_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LocalitySummary"
+                  },
+                  "type": "array",
+                  "title": "Response List Localities Localities Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deals": {
+      "get": {
+        "tags": [
+          "Intelligence"
+        ],
+        "summary": "List Deals",
+        "description": "List market listings priced at least 15% below predicted fair algorithmic valuation.",
+        "operationId": "list_deals_deals_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Maximum number of deals to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of deals to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DealSummary"
+                  },
+                  "title": "Response List Deals Deals Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predict": {
+      "post": {
+        "tags": [
+          "Inference"
+        ],
+        "summary": "Predict Price",
+        "description": "Predict fair asking price with 80% conformal interval and exact factor breakdown.",
+        "operationId": "predict_price_predict_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricePredictionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DealSummary": {
+        "properties": {
+          "listing_id": {
+            "type": "string",
+            "title": "Listing Id"
+          },
+          "locality": {
+            "type": "string",
+            "title": "Locality"
+          },
+          "bhk": {
+            "type": "integer",
+            "title": "Bhk"
+          },
+          "area_sqft": {
+            "type": "number",
+            "title": "Area Sqft"
+          },
+          "actual_price_inr": {
+            "type": "number",
+            "title": "Actual Price Inr"
+          },
+          "actual_ppsf": {
+            "type": "number",
+            "title": "Actual Ppsf"
+          },
+          "predicted_price_inr": {
+            "type": "number",
+            "title": "Predicted Price Inr"
+          },
+          "predicted_ppsf": {
+            "type": "number",
+            "title": "Predicted Ppsf"
+          },
+          "discount_pct": {
+            "type": "number",
+            "title": "Discount Pct"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          }
+        },
+        "type": "object",
+        "required": [
+          "listing_id",
+          "locality",
+          "bhk",
+          "area_sqft",
+          "actual_price_inr",
+          "actual_ppsf",
+          "predicted_price_inr",
+          "predicted_ppsf",
+          "discount_pct",
+          "lat",
+          "lon"
+        ],
+        "title": "DealSummary",
+        "description": "Detected market listing priced below algorithmic fair valuation."
+      },
+      "FeatureFactor": {
+        "properties": {
+          "feature": {
+            "type": "string",
+            "title": "Feature"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "factor": {
+            "type": "number",
+            "title": "Factor"
+          },
+          "effect_pct": {
+            "type": "number",
+            "title": "Effect Pct"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature",
+          "label",
+          "factor",
+          "effect_pct",
+          "direction"
+        ],
+        "title": "FeatureFactor",
+        "description": "Individual feature factor impact."
+      },
+      "GroupFactor": {
+        "properties": {
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "factor": {
+            "type": "number",
+            "title": "Factor"
+          },
+          "effect_pct": {
+            "type": "number",
+            "title": "Effect Pct"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "group",
+          "factor",
+          "effect_pct",
+          "direction"
+        ],
+        "title": "GroupFactor",
+        "description": "Aggregate group factor impact."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LocalitySummary": {
+        "properties": {
+          "locality_id": {
+            "type": "string",
+            "title": "Locality Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "median_price_inr": {
+            "type": "number",
+            "title": "Median Price Inr"
+          },
+          "median_ppsf": {
+            "type": "number",
+            "title": "Median Ppsf"
+          },
+          "listing_count": {
+            "type": "integer",
+            "title": "Listing Count"
+          },
+          "dlc_rate_per_sqm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dlc Rate Per Sqm"
+          },
+          "dist_metro_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dist Metro Km"
+          }
+        },
+        "type": "object",
+        "required": [
+          "locality_id",
+          "name",
+          "lat",
+          "lon",
+          "median_price_inr",
+          "median_ppsf",
+          "listing_count"
+        ],
+        "title": "LocalitySummary",
+        "description": "Micro-market locality profile and baseline statistics."
+      },
+      "ModelMetaResponse": {
+        "properties": {
+          "model_name": {
+            "type": "string",
+            "title": "Model Name"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "trained_at": {
+            "type": "string",
+            "title": "Trained At"
+          },
+          "features_count": {
+            "type": "integer",
+            "title": "Features Count"
+          },
+          "spatial_cv_mape": {
+            "type": "number",
+            "title": "Spatial Cv Mape"
+          },
+          "test_mape": {
+            "type": "number",
+            "title": "Test Mape"
+          },
+          "test_r2": {
+            "type": "number",
+            "title": "Test R2"
+          },
+          "nominal_coverage": {
+            "type": "number",
+            "title": "Nominal Coverage"
+          },
+          "empirical_coverage": {
+            "type": "number",
+            "title": "Empirical Coverage"
+          },
+          "container_ram_budget": {
+            "type": "string",
+            "title": "Container Ram Budget"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model_name",
+          "model_version",
+          "trained_at",
+          "features_count",
+          "spatial_cv_mape",
+          "test_mape",
+          "test_r2",
+          "nominal_coverage",
+          "empirical_coverage",
+          "container_ram_budget"
+        ],
+        "title": "ModelMetaResponse",
+        "description": "Metadata regarding served model weights, metrics, and training provenance."
+      },
+      "PricePredictionResponse": {
+        "properties": {
+          "estimate_inr": {
+            "type": "number",
+            "title": "Estimate Inr"
+          },
+          "estimate_ppsf": {
+            "type": "number",
+            "title": "Estimate Ppsf"
+          },
+          "interval_low_inr": {
+            "type": "number",
+            "title": "Interval Low Inr"
+          },
+          "interval_high_inr": {
+            "type": "number",
+            "title": "Interval High Inr"
+          },
+          "interval_low_ppsf": {
+            "type": "number",
+            "title": "Interval Low Ppsf"
+          },
+          "interval_high_ppsf": {
+            "type": "number",
+            "title": "Interval High Ppsf"
+          },
+          "nominal_coverage": {
+            "type": "number",
+            "title": "Nominal Coverage",
+            "default": 0.8
+          },
+          "typical_price_inr": {
+            "type": "number",
+            "title": "Typical Price Inr"
+          },
+          "locality": {
+            "type": "string",
+            "title": "Locality"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon"
+          },
+          "coord_precision": {
+            "type": "string",
+            "title": "Coord Precision"
+          },
+          "dlc_rate_per_sqm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dlc Rate Per Sqm"
+          },
+          "factors": {
+            "items": {
+              "$ref": "#/components/schemas/FeatureFactor"
+            },
+            "type": "array",
+            "title": "Factors"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/GroupFactor"
+            },
+            "type": "array",
+            "title": "Groups"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estimate_inr",
+          "estimate_ppsf",
+          "interval_low_inr",
+          "interval_high_inr",
+          "interval_low_ppsf",
+          "interval_high_ppsf",
+          "typical_price_inr",
+          "locality",
+          "lat",
+          "lon",
+          "coord_precision",
+          "factors",
+          "groups"
+        ],
+        "title": "PricePredictionResponse",
+        "description": "Complete price intelligence estimate with calibrated interval and exact factor breakdown."
+      },
+      "PropertyRequest": {
+        "properties": {
+          "area_sqft": {
+            "type": "number",
+            "maximum": 20000.0,
+            "minimum": 100.0,
+            "title": "Area Sqft",
+            "description": "Total built-up/super area in square feet"
+          },
+          "bhk": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Bhk",
+            "description": "Number of bedrooms (BHK)"
+          },
+          "bathrooms": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 12.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bathrooms",
+            "description": "Number of bathrooms"
+          },
+          "floor": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 60.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Floor",
+            "description": "Floor level (0 = ground)",
+            "default": 1
+          },
+          "total_floors": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 60.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Floors",
+            "description": "Total number of floors in building",
+            "default": 4
+          },
+          "property_type": {
+            "type": "string",
+            "title": "Property Type",
+            "description": "Property type",
+            "default": "Apartment"
+          },
+          "furnishing": {
+            "type": "string",
+            "title": "Furnishing",
+            "description": "Furnishing state",
+            "default": "Semi-Furnished"
+          },
+          "possession_status": {
+            "type": "string",
+            "title": "Possession Status",
+            "description": "Possession readiness",
+            "default": "Ready to Move"
+          },
+          "posted_by": {
+            "type": "string",
+            "title": "Posted By",
+            "description": "Listing poster identity",
+            "default": "Owner"
+          },
+          "rera_flag": {
+            "type": "integer",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Rera Flag",
+            "description": "1 if RERA approved/registered, 0 otherwise",
+            "default": 1
+          },
+          "locality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locality",
+            "description": "Jaipur locality / neighborhood name"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat",
+            "description": "WGS84 Latitude"
+          },
+          "lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lon",
+            "description": "WGS84 Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "area_sqft",
+          "bhk"
+        ],
+        "title": "PropertyRequest",
+        "description": "Input parameters for a single Jaipur property price estimation."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

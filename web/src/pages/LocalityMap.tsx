@@ -65,12 +65,14 @@ export const LocalityMap: React.FC<LocalityMapProps> = ({ onSelectLocality }) =>
 
     const map = L.map(mapContainerRef.current).setView([26.9124, 75.7873], 12);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      subdomains: 'abcd',
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    }).addTo(map);
+    L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+      {
+        maxZoom: 18,
+        attribution:
+          'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Esri, DeLorme, NAVTEQ, TomTom',
+      }
+    ).addTo(map);
 
     mapInstanceRef.current = map;
 

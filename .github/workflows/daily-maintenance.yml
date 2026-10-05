@@ -24,7 +24,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-prod.txt pytest pytest-cov pandera httpx
 
-      - name: Run test suite & verify 25 tests
+      - name: Run test suite & verify 30 tests
         run: |
           python -m pytest -v tests --cov=src --cov=api --cov-report=xml
 

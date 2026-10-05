@@ -75,3 +75,4 @@
 | **GATE G7** | **PASSED** | End-to-end platform, model card, case study, CI verified | Platform Complete & Production Ready |
 | **GH-SYNC** | DONE | [GitHub Repo](https://github.com/VedanshMittal20/jaipur-price-intelligence) | Public GitHub repo pushed with full commit history |
 | **AUTOMATION** | DONE | `.github/workflows/daily-maintenance.yml`, `task-566` | Daily maintenance CI and autonomous agent cron active |
+| **AUDIT-01** | DONE | `src/jpi/geo/nearest.py`, `tests/test_features.py`, `web/` | Spatial indexing (k_nearest_m), 5 DLC rate additions, WCAG AA accessibility |

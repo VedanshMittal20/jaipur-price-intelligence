@@ -61,12 +61,16 @@ export const DealFinder: React.FC<DealFinderProps> = ({ onInspectDeal }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search by Locality */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label
+              htmlFor="deal-search-input"
+              className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+            >
               Locality Search
             </label>
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
+                id="deal-search-input"
                 type="text"
                 placeholder="Filter by locality..."
                 value={searchQuery}
@@ -78,13 +82,16 @@ export const DealFinder: React.FC<DealFinderProps> = ({ onInspectDeal }) => {
 
           {/* BHK Filter */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+            <span className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
               Configuration (BHK)
-            </label>
-            <div className="flex space-x-1">
+            </span>
+            <div className="flex space-x-1" role="group" aria-label="BHK Filter">
               {(['all', 1, 2, 3, 4] as const).map((b) => (
                 <button
                   key={b}
+                  type="button"
+                  aria-pressed={bhkFilter === b}
+                  aria-label={b === 'all' ? 'All configurations' : `${b} BHK properties`}
                   onClick={() => setBhkFilter(b)}
                   className={`flex-1 py-2 text-xs font-semibold rounded-xl border transition-all ${
                     bhkFilter === b
@@ -101,12 +108,16 @@ export const DealFinder: React.FC<DealFinderProps> = ({ onInspectDeal }) => {
           {/* Minimum Discount Slider */}
           <div>
             <div className="flex justify-between items-center mb-1.5">
-              <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              <label
+                htmlFor="min-discount-input"
+                className="text-xs font-semibold text-slate-700 uppercase tracking-wider"
+              >
                 Min Discount
               </label>
               <span className="text-xs font-bold text-rose-600 font-mono">≥ {minDiscount}%</span>
             </div>
             <input
+              id="min-discount-input"
               type="range"
               min="15"
               max="35"
@@ -119,10 +130,14 @@ export const DealFinder: React.FC<DealFinderProps> = ({ onInspectDeal }) => {
 
           {/* Sort By */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label
+              htmlFor="sort-listings-select"
+              className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+            >
               Sort Listings
             </label>
             <select
+              id="sort-listings-select"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"

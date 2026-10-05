@@ -35,6 +35,56 @@ def test_nearest_index_accuracy():
         assert abs(tree_dists[i] - min_brute) < 1.0, "Tree distance differs from brute force by > 1m!"
 
 
+def test_nearest_index_k_nearest_m():
+    """Verify k_nearest_m returns sorted top-k nearest distances."""
+    np.random.seed(42)
+    targets = np.random.uniform([26.7, 75.6], [27.0, 76.0], size=(30, 2))
+    queries = np.random.uniform([26.7, 75.6], [27.0, 76.0], size=(10, 2))
+
+    idx = NearestIndex(targets)
+    k_dists = idx.k_nearest_m(queries, k=3)
+    assert k_dists.shape == (10, 3)
+
+    for i in range(len(queries)):
+        q = queries[i]
+        brute_sorted = sorted([haversine_ground_truth(q[0], q[1], t[0], t[1]) for t in targets])
+        for rank in range(3):
+            assert abs(k_dists[i, rank] - brute_sorted[rank]) < 1.0
+        # Check ascending order
+        assert k_dists[i, 0] <= k_dists[i, 1] <= k_dists[i, 2]
+
+
+def test_nearest_index_with_index():
+    """Verify nearest_with_index returns correct point indices."""
+    np.random.seed(42)
+    targets = np.array([
+        [26.8500, 75.7600],
+        [26.9000, 75.7800],
+        [26.9500, 75.8000],
+    ])
+    idx = NearestIndex(targets)
+    # Query very close to point 1
+    query = np.array([26.9001, 75.7801])
+    dists, indices = idx.nearest_with_index(query, k=1)
+    assert indices[0, 0] == 1
+    assert dists[0, 0] < 50.0  # within 50m
+
+
+def test_nearest_index_validation():
+    """Verify input validation on k bounds and invalid shapes."""
+    targets = np.array([[26.85, 75.76], [26.90, 75.78]])
+    idx = NearestIndex(targets)
+
+    with pytest.raises(ValueError, match="k must be at least 1"):
+        idx.k_nearest_m([[26.88, 75.77]], k=0)
+
+    with pytest.raises(ValueError, match="exceeds indexed point count"):
+        idx.k_nearest_m([[26.88, 75.77]], k=5)
+
+    with pytest.raises(ValueError, match="need a non-empty"):
+        NearestIndex(np.empty((0, 2)))
+
+
 def test_leakage_audit_no_target_correlation():
     """Verify that no engineered input feature has correlation > 0.98 with log_price."""
     feats_path = DATA / "processed" / "features.parquet"

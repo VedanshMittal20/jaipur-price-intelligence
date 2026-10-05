@@ -227,11 +227,15 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Locality */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="locality-select"
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
                   Locality / Neighborhood
                 </label>
                 <div className="relative">
                   <select
+                    id="locality-select"
                     value={formData.locality}
                     onChange={(e) => setFormData({ ...formData, locality: e.target.value })}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white"
@@ -248,7 +252,10 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
               {/* Area */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  <label
+                    htmlFor="area-sqft-input"
+                    className="text-xs font-semibold text-slate-700 uppercase tracking-wider"
+                  >
                     Super Built-up Area (sq ft)
                   </label>
                   <span className="text-xs font-bold text-brand-600 font-mono">
@@ -256,6 +263,7 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
                   </span>
                 </div>
                 <input
+                  id="area-sqft-input"
                   type="number"
                   min="200"
                   max="15000"
@@ -265,11 +273,13 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
                   className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white"
                 />
                 {/* Area Quick Buttons */}
-                <div className="flex space-x-1.5 mt-2">
+                <div className="flex space-x-1.5 mt-2" role="group" aria-label="Preset area sizes">
                   {[900, 1350, 1800, 2400].map((sqft) => (
                     <button
                       key={sqft}
                       type="button"
+                      aria-label={`Set area to ${sqft} square feet`}
+                      aria-pressed={formData.area_sqft === sqft}
                       onClick={() => setFormData({ ...formData, area_sqft: sqft })}
                       className={`text-xs px-2.5 py-1 rounded-md border transition-all ${
                         formData.area_sqft === sqft
@@ -286,10 +296,14 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
               {/* BHK & Bathrooms */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label
+                    htmlFor="bhk-select"
+                    className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
                     Bedrooms (BHK)
                   </label>
                   <select
+                    id="bhk-select"
                     value={formData.bhk}
                     onChange={(e) => {
                       const bhk = Number(e.target.value);
@@ -306,10 +320,14 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label
+                    htmlFor="bathrooms-select"
+                    className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
                     Bathrooms
                   </label>
                   <select
+                    id="bathrooms-select"
                     value={formData.bathrooms}
                     onChange={(e) => setFormData({ ...formData, bathrooms: Number(e.target.value) })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -326,10 +344,14 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
               {/* Property Type & Furnishing */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label
+                    htmlFor="property-type-select"
+                    className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
                     Type
                   </label>
                   <select
+                    id="property-type-select"
                     value={formData.property_type}
                     onChange={(e) => setFormData({ ...formData, property_type: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -342,10 +364,14 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label
+                    htmlFor="furnishing-select"
+                    className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
                     Furnishing
                   </label>
                   <select
+                    id="furnishing-select"
                     value={formData.furnishing}
                     onChange={(e) => setFormData({ ...formData, furnishing: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -360,10 +386,14 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
               {/* Floor & Possession */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label
+                    htmlFor="floor-input"
+                    className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
                     Floor Level
                   </label>
                   <input
+                    id="floor-input"
                     type="number"
                     min="0"
                     max="50"
@@ -374,10 +404,14 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label
+                    htmlFor="possession-status-select"
+                    className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
                     Possession Status
                   </label>
                   <select
+                    id="possession-status-select"
                     value={formData.possession_status}
                     onChange={(e) => setFormData({ ...formData, possession_status: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -390,8 +424,9 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
 
               {/* RERA and Poster */}
               <div className="pt-2 flex items-center justify-between border-t border-slate-100">
-                <label className="flex items-center space-x-2 cursor-pointer">
+                <label htmlFor="rera-approved-checkbox" className="flex items-center space-x-2 cursor-pointer">
                   <input
+                    id="rera-approved-checkbox"
                     type="checkbox"
                     checked={formData.rera_flag === 1}
                     onChange={(e) => setFormData({ ...formData, rera_flag: e.target.checked ? 1 : 0 })}
@@ -439,7 +474,12 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
           {result && (
             <>
               {/* Valuation Hero Card */}
-              <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+              <div
+                role="region"
+                aria-live="polite"
+                aria-label="Valuation Result"
+                className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden"
+              >
                 <div className="absolute top-0 right-0 -mt-6 -mr-6 w-36 h-36 rounded-full bg-brand-500/10 blur-2xl pointer-events-none" />
 
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-slate-300 uppercase tracking-wider mb-2">
@@ -451,6 +491,7 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
                   <div className="flex items-center space-x-2">
                     <button
                       type="button"
+                      aria-label="Download Valuation Report as JSON"
                       onClick={handleExportJSON}
                       className="flex items-center space-x-1 bg-slate-800/90 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-full border border-slate-700 text-[11px] font-sans font-medium transition-all"
                       title="Download Valuation Report (JSON)"
@@ -460,6 +501,7 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
                     </button>
                     <button
                       type="button"
+                      aria-label="Copy Shareable Valuation Link"
                       onClick={handleShareLink}
                       className="flex items-center space-x-1 bg-slate-800/90 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-full border border-slate-700 text-[11px] font-sans font-medium transition-all"
                       title="Copy Shareable Valuation Link"

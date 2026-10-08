@@ -71,3 +71,5 @@ Thumbs.db
 *.swp
 server.log
 .agents/
+backend.log 
+frontend.log 

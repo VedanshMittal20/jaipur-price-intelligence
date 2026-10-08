@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Tuple
 import joblib
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import TargetEncoder
 
 from jpi.config import ART, DATA
 from jpi.geo.nearest import GeoLayers
@@ -62,6 +63,7 @@ FEATURE_GROUPS = {
     "coord_precision": "Locality & market",
     "dlc_rate_per_sqm": "Locality & market",
     "dlc_missing": "Locality & market",
+    "spatio_temporal_te": "Locality & market",
 }
 
 FEATURE_LABELS = {
@@ -92,6 +94,7 @@ FEATURE_LABELS = {
     "coord_precision": "Geocode Location Precision",
     "dlc_rate_per_sqm": "Government Circle Rate (DLC)",
     "dlc_missing": "Circle Rate Prior Available",
+    "spatio_temporal_te": "Spatio-Temporal Target Encoding",
 }
 
 
@@ -126,9 +129,17 @@ class FeaturePipeline:
         self.categories_: Dict[str, List[str]] = {}
         self.dlc_map_: Dict[str, float] = {}
         self.feature_names_: List[str] = []
+        self.te_ = TargetEncoder(target_type="continuous", cv=5)
 
     def fit(self, df: pd.DataFrame, y=None):
         """Learn categorical vocabularies and DLC reference mapping."""
+        # Fit TargetEncoder for Spatio-Temporal encoding
+        if y is not None:
+            # Combine locality and possession_status (time)
+            poss = df["possession_status"].astype(str) if "possession_status" in df else pd.Series([""] * len(df), index=df.index)
+            st = (df["locality_id"].astype(str) + "_" + poss).to_frame("spatio_temporal")
+            self.te_.fit(st, y)
+
         # Load DLC map
         dlc_df = load_dlc_table()
         if not dlc_df.empty:
@@ -200,7 +211,17 @@ class FeaturePipeline:
         out["dlc_rate_per_sqm"] = dlc_rates.fillna(30000.0).astype(float)
         out["dlc_missing"] = dlc_rates.isna().astype(float)
 
-        # 4. Categoricals: encode as integer category codes
+        # 4. Spatio-Temporal Target Encoding
+        poss = df["possession_status"].astype(str) if "possession_status" in df else pd.Series([""] * len(df), index=df.index)
+        st = (df["locality_id"].astype(str) + "_" + poss).to_frame("spatio_temporal")
+        out["spatio_temporal"] = st["spatio_temporal"]
+        try:
+            out["spatio_temporal_te"] = self.te_.transform(st).flatten()
+        except Exception:
+            # Fallback if not fitted or other error
+            out["spatio_temporal_te"] = 0.0
+
+        # 5. Categoricals: encode as integer category codes
         for col in CATEGORICAL_COLS:
             vocab = self.categories_.get(col, [])
             val_series = df[col].astype(str).str.lower().str.replace(" ", "_").str.replace("-", "_")
@@ -216,10 +237,10 @@ def build_and_save_features():
     df_clean = pd.read_parquet(clean_path)
 
     pipe = FeaturePipeline()
-    pipe.fit(df_clean)
+    y = np.log(df_clean["price_inr"].values)
+    pipe.fit(df_clean, y)
 
     X = pipe.transform(df_clean)
-    y = np.log(df_clean["price_inr"].values)
 
     # Save preprocess pipeline
     joblib.dump(pipe, ART / "model" / "preprocess.joblib")

@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="flex space-x-1 sm:space-x-2">
+          <nav className="flex space-x-1 sm:space-x-2" aria-label="Main Navigation">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -43,6 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center space-x-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     isActive
                       ? 'bg-brand-50 text-brand-700 shadow-sm'

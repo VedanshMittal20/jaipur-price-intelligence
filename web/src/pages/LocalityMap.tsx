@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { LocalityInsightResponse, LocalitySummary } from '../types/api';
 import { fetchLocalities, fetchLocalityInsight } from '../api/client';
 import { formatINR, formatPPSF, formatNumber } from '../lib/format';
@@ -65,14 +66,30 @@ export const LocalityMap: React.FC<LocalityMapProps> = ({ onSelectLocality }) =>
 
     const map = L.map(mapContainerRef.current).setView([26.9124, 75.7873], 12);
 
-    L.tileLayer(
+    const streetLayer = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
       {
         maxZoom: 18,
         attribution:
           'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Esri, DeLorme, NAVTEQ, TomTom',
       }
-    ).addTo(map);
+    );
+
+    const satelliteLayer = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        maxZoom: 18,
+        attribution:
+          'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+      }
+    );
+
+    streetLayer.addTo(map);
+
+    L.control.layers({
+      'Default': streetLayer,
+      'Satellite': satelliteLayer
+    }).addTo(map);
 
     mapInstanceRef.current = map;
 

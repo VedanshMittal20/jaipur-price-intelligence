@@ -143,3 +143,39 @@ def test_knn_price_feature_no_self_leakage():
 
     # Row 0's own feature MUST be unchanged because row 0 is excluded from its own neighbors!
     assert res1[0, 0] == pytest.approx(res2[0, 0], abs=1e-6)
+
+
+def test_nearest_index_query_radius_distances():
+    """Verify query_radius_distances returns correct sorted distances within threshold."""
+    targets = np.array([
+        [26.8500, 75.7600],
+        [26.8520, 75.7620],
+        [26.9500, 75.8000],  # far away (~11 km)
+    ])
+    idx = NearestIndex(targets)
+    query = np.array([[26.8500, 75.7600]])
+
+    indices, dists = idx.query_radius_distances(query, radius_m=500.0)
+    assert len(indices[0]) == 2
+    assert 0 in indices[0]
+    assert 1 in indices[0]
+    assert 2 not in indices[0]
+    assert dists[0][0] < 1.0  # distance to point 0 is ~0m
+    assert dists[0][1] < 500.0
+
+
+def test_nearest_index_exponential_decay_score():
+    """Verify exponential_decay_score computes accurate distance-decayed kernel density."""
+    targets = np.array([
+        [26.8500, 75.7600],
+        [26.8500, 75.7600],  # collocated
+    ])
+    idx = NearestIndex(targets)
+    # Query collocated on both points: d=0 for both points => exp(0) + exp(0) = 2.0
+    query = np.array([[26.8500, 75.7600]])
+    score = idx.exponential_decay_score(query, decay_half_life_m=1000.0)
+    assert pytest.approx(score[0], rel=1e-3) == 2.0
+
+    # Validation errors
+    with pytest.raises(ValueError, match="decay_half_life_m must be strictly positive"):
+        idx.exponential_decay_score(query, decay_half_life_m=-50.0)

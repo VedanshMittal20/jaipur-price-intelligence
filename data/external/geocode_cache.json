@@ -67,5 +67,6 @@
   "vidhyadhar_nagar": {"lat": 26.9650, "lon": 75.7800},
   "chitrakoot": {"lat": 26.9020, "lon": 75.7380},
   "durgapura": {"lat": 26.8520, "lon": 75.7900},
-  "central_jaipur": {"lat": 26.9124, "lon": 75.7873}
+  "central_jaipur": {"lat": 26.9124, "lon": 75.7873},
+  "sitapura": {"lat": 26.7725, "lon": 75.8340}
 }

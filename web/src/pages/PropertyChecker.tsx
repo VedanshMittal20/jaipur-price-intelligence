@@ -105,7 +105,7 @@ export const PropertyChecker: React.FC<PropertyCheckerProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `jaipur-valuation-${formData.locality.toLowerCase().replace(/\\s+/g, '-')}-${result.estimate_inr}.json`;
+    a.download = `jaipur-valuation-${formData.locality.toLowerCase().replace(/\s+/g, '-')}-${result.estimate_inr}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

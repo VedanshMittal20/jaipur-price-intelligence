@@ -26,7 +26,8 @@
     "locality_id": "Locality & market",
     "coord_precision": "Locality & market",
     "dlc_rate_per_sqm": "Locality & market",
-    "dlc_missing": "Locality & market"
+    "dlc_missing": "Locality & market",
+    "spatio_temporal_te": "Locality & market"
   },
   "labels": {
     "area_sqft": "Total Area (sq ft)",
@@ -55,6 +56,7 @@
     "locality_id": "Locality Premium",
     "coord_precision": "Geocode Location Precision",
     "dlc_rate_per_sqm": "Government Circle Rate (DLC)",
-    "dlc_missing": "Circle Rate Prior Available"
+    "dlc_missing": "Circle Rate Prior Available",
+    "spatio_temporal_te": "Spatio-Temporal Target Encoding"
   }
 }

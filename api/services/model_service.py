@@ -68,6 +68,15 @@ class ModelService:
             dlc_df = pd.read_csv(dlc_path)
             self.dlc_map = dict(zip(dlc_df["locality_id"].str.lower(), dlc_df["rate_per_sqm"]))
 
+        map_path = DATA / "external" / "locality_map.csv"
+        self.locality_mapping: Dict[str, str] = {}
+        if map_path.exists():
+            df_map = pd.read_csv(map_path)
+            for _, r in df_map.iterrows():
+                variant = str(r["raw_variant"]).strip().lower()
+                canonical = str(r["canonical"]).strip().lower()
+                self.locality_mapping[variant] = canonical
+
         # 6. Metrics Snapshot
         metrics_path = ART / "model" / "metrics.json"
         self.metrics: Dict[str, Any] = {}
@@ -109,8 +118,11 @@ class ModelService:
         # Case 1: Exact coordinates provided
         if req.lat is not None and req.lon is not None:
             lat, lon = req.lat, req.lon
-            # If locality is provided and in cache, keep it; otherwise check nearest
-            if norm_loc and norm_loc in self.geocode_cache:
+            raw_key = req.locality.strip().lower() if req.locality else ""
+            mapped_key = self.locality_mapping.get(norm_loc) or self.locality_mapping.get(raw_key)
+            if mapped_key and mapped_key in self.geocode_cache:
+                loc_id = mapped_key
+            elif norm_loc and norm_loc in self.geocode_cache:
                 loc_id = norm_loc
             else:
                 # Find nearest locality centroid
@@ -124,6 +136,13 @@ class ModelService:
 
         # Case 2: Locality provided, coordinates missing
         if norm_loc:
+            # Check canonical mapping table first (handles spelling variants & aliases)
+            raw_key = req.locality.strip().lower() if req.locality else ""
+            mapped_key = self.locality_mapping.get(norm_loc) or self.locality_mapping.get(raw_key)
+            if mapped_key and mapped_key in self.geocode_cache:
+                centroid = self.geocode_cache[mapped_key]
+                return centroid["lat"], centroid["lon"], mapped_key, "locality_centroid"
+
             # Direct match
             if norm_loc in self.geocode_cache:
                 centroid = self.geocode_cache[norm_loc]
@@ -166,6 +185,8 @@ class ModelService:
 
         df_row = pd.DataFrame([row_dict])
         transformed = self.pipeline.transform(df_row)
+        if "spatio_temporal" in transformed.columns:
+            transformed = transformed.drop(columns=["spatio_temporal"])
 
         # LightGBM Tree Contribution Breakdown
         contribs = self.booster.predict(transformed, pred_contrib=True)
@@ -179,7 +200,7 @@ class ModelService:
         # Exact Multiplicative Explanations
         exp = explain_prediction(
             contribs[0],
-            list(transformed.columns),
+            self.booster.feature_name(),
             self.groups,
             self.labels,
             top_k=8,
@@ -437,7 +458,7 @@ class ModelService:
             return
 
         df_feat = pd.read_parquet(features_path)
-        drop_cols = ["price_inr", "log_price", "listing_id", "lat", "lon", "spatial_block"]
+        drop_cols = ["price_inr", "log_price", "listing_id", "lat", "lon", "spatial_block", "spatio_temporal"]
         X_cols = [c for c in df_feat.columns if c not in drop_cols]
 
         preds_log = self.booster.predict(df_feat[X_cols])

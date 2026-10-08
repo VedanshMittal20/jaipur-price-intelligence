@@ -25,12 +25,26 @@ def train_and_evaluate_all():
     # 1. Spatial Splits (M1)
     df_train, df_test, folds = create_spatial_splits(df_all)
 
+    # 1.5 Fix Target Leakage: Recompute spatio_temporal_te out-of-fold for CV
+    from sklearn.preprocessing import TargetEncoder
+    cv_te = np.zeros(len(df_train))
+    y_train_log = df_train["log_price"].values
+    st_train = df_train[["spatio_temporal"]]
+    for tr, va in folds:
+        te = TargetEncoder(target_type="continuous")
+        te.fit(st_train.iloc[tr], y_train_log[tr])
+        cv_te[va] = te.transform(st_train.iloc[va]).flatten()
+    df_train["spatio_temporal_te"] = cv_te
+
+    te_full = TargetEncoder(target_type="continuous")
+    te_full.fit(st_train, y_train_log)
+    df_test["spatio_temporal_te"] = te_full.transform(df_test[["spatio_temporal"]]).flatten()
+
     # Separate target and features
-    drop_cols = ["price_inr", "log_price", "listing_id", "lat", "lon", "spatial_block"]
+    drop_cols = ["price_inr", "log_price", "listing_id", "lat", "lon", "spatial_block", "spatio_temporal"]
     feature_cols = [c for c in df_train.columns if c not in drop_cols]
 
     X_train = df_train[feature_cols]
-    y_train_log = df_train["log_price"].values
 
     X_test = df_test[feature_cols]
     y_test_log = df_test["log_price"].values
@@ -97,9 +111,9 @@ def train_and_evaluate_all():
 
     ablation_sets = {
         "A1_Property_Only": prop_cols,
-        "A2_Plus_Locality": prop_cols + ["locality_id", "coord_precision"],
-        "A3_Plus_Geo": prop_cols + ["locality_id", "coord_precision"] + geo_dist_cols + geo_amenity_cols,
-        "A4_Plus_DLC": prop_cols + ["locality_id", "coord_precision"] + geo_dist_cols + geo_amenity_cols + dlc_cols,
+        "A2_Plus_Locality": prop_cols + ["locality_id", "coord_precision", "spatio_temporal_te"],
+        "A3_Plus_Geo": prop_cols + ["locality_id", "coord_precision", "spatio_temporal_te"] + geo_dist_cols + geo_amenity_cols,
+        "A4_Plus_DLC": prop_cols + ["locality_id", "coord_precision", "spatio_temporal_te"] + geo_dist_cols + geo_amenity_cols + dlc_cols,
     }
 
     ablation_results = {}

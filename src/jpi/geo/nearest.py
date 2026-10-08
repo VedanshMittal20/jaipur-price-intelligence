@@ -1,7 +1,7 @@
 """Shared nearest-neighbor and spatial radius query classes using Haversine BallTree."""
 
 from pathlib import Path
-from typing import Dict, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from sklearn.neighbors import BallTree
@@ -63,6 +63,54 @@ class NearestIndex:
             r=radius_m / EARTH_R_M,
             count_only=True,
         )
+
+    def query_radius_distances(
+        self, query_deg: Union[np.ndarray, list], radius_m: float
+    ) -> Tuple[List[np.ndarray], List[np.ndarray]]:
+        """Return indices and distances in meters for all indexed points within radius_m."""
+        if radius_m <= 0:
+            raise ValueError("radius_m must be strictly positive")
+        q = np.asarray(query_deg, dtype=float)
+        if q.ndim == 1:
+            q = q.reshape(1, -1)
+        indices, dists_rad = self._tree.query_radius(
+            np.radians(q),
+            r=radius_m / EARTH_R_M,
+            return_distance=True,
+            sort_results=True,
+        )
+        dists_m = [d * EARTH_R_M for d in dists_rad]
+        return indices, dists_m
+
+    def exponential_decay_score(
+        self,
+        query_deg: Union[np.ndarray, list],
+        decay_half_life_m: float = 1000.0,
+        max_radius_m: Optional[float] = None,
+    ) -> np.ndarray:
+        """Compute distance-decayed spatial accessibility score using exponential kernel."""
+        if decay_half_life_m <= 0:
+            raise ValueError("decay_half_life_m must be strictly positive")
+        cutoff = max_radius_m if max_radius_m is not None else 4.0 * decay_half_life_m
+        if cutoff <= 0:
+            raise ValueError("max_radius_m must be strictly positive")
+
+        q = np.asarray(query_deg, dtype=float)
+        if q.ndim == 1:
+            q = q.reshape(1, -1)
+
+        _, dists_rad = self._tree.query_radius(
+            np.radians(q),
+            r=cutoff / EARTH_R_M,
+            return_distance=True,
+        )
+        lambda_factor = np.log(2.0) / decay_half_life_m
+        scores = np.zeros(len(q), dtype=float)
+        for i, d_arr in enumerate(dists_rad):
+            if len(d_arr) > 0:
+                d_m = d_arr * EARTH_R_M
+                scores[i] = np.sum(np.exp(-lambda_factor * d_m))
+        return scores
 
 
 class GeoLayers:

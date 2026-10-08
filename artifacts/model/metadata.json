@@ -29,6 +29,8 @@
     "n_shop_2000m",
     "dlc_rate_per_sqm",
     "dlc_missing",
+    "spatio_temporal",
+    "spatio_temporal_te",
     "property_type",
     "furnishing",
     "possession_status",

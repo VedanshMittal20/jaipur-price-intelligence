@@ -15,12 +15,12 @@ def client():
 
 
 def test_health_endpoint(client):
-    """GET /health returns 200 and reports healthy state with 35 loaded features."""
+    """GET /health returns 200 and reports healthy state with 36 loaded features."""
     resp = client.get("/health")
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "healthy"
-    assert data["features_loaded"] == 35
+    assert data["features_loaded"] == 36
     assert data["model_version"] == "2.0.0"
 
 
@@ -29,8 +29,8 @@ def test_model_metadata_endpoint(client):
     resp = client.get("/meta/model")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["features_count"] == 35
-    assert 0.15 <= data["test_mape"] <= 0.35
+    assert data["features_count"] == 36
+    assert 0.15 <= data["test_mape"] <= 0.36
     assert data["test_r2"] >= 0.70
     assert 0.70 <= data["empirical_coverage"] <= 0.90
 
@@ -69,7 +69,7 @@ def test_deals_endpoint(client):
 def test_predict_success_with_locality(client):
     """POST /predict generates valuation, calibrated interval, and exact factor breakdown."""
     payload = {
-        "area_sqft": 1350.0,
+        "area_sqft": 1360.0,
         "bhk": 3,
         "bathrooms": 3,
         "floor": 3,
@@ -182,5 +182,21 @@ def test_locality_insight_endpoint(client):
     # Non-existent locality returns 404
     resp_404 = client.get("/localities/non_existent_micro_market_xyz/insight")
     assert resp_404.status_code == 404
+
+
+def test_predict_resolves_locality_alias(client):
+    """POST /predict resolves common spelling variants and aliases via canonical mapping."""
+    payload = {
+        "area_sqft": 1200.0,
+        "bhk": 2,
+        "locality": "Mansarover",  # Spelling variant of Mansarovar
+        "property_type": "Apartment",
+    }
+    resp = client.post("/predict", json=payload)
+    assert resp.status_code == 200
+    res = resp.json()
+    assert res["locality"] == "Mansarovar"
+    assert res["estimate_inr"] > 1_000_000
+    assert res["coord_precision"] == "locality_centroid"
 
 

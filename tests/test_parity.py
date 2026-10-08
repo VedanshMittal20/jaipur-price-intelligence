@@ -1,9 +1,7 @@
 """Parity tests ensuring batch feature extraction equals row-by-row extraction."""
 
 import joblib
-import numpy as np
 import pandas as pd
-import pytest
 
 from jpi.config import ART, DATA, SEED
 from jpi.features.build import FeaturePipeline

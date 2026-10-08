@@ -1,6 +1,5 @@
 """Spatial block partitioning and cross-validation fold generation."""
 
-from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
@@ -48,7 +47,7 @@ def create_spatial_splits(
         gkf.split(df_train, groups=df_train["spatial_block"])
     )
 
-    print(f"Spatial splitting complete:")
+    print("Spatial splitting complete:")
     print(f"  - Total blocks: {len(np.unique(blocks))}")
     print(
         f"  - Training set: {len(df_train)} rows across {len(np.unique(df_train['spatial_block']))} blocks"

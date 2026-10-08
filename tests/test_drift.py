@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from jpi.monitoring.drift import calculate_drift_report, calculate_psi
 

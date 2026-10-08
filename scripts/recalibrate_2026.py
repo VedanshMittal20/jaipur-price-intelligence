@@ -1,6 +1,5 @@
 """Recalibrate Jaipur listing dataset to 2026 market values using RBI HPI and DLC rate floors."""
 
-from pathlib import Path
 import numpy as np
 import pandas as pd
 
@@ -26,7 +25,7 @@ def recalibrate_listings():
         df["price_raw_inr"] = df["price_inr"].copy()
 
     # Map DLC rate per sqm
-    dlc_map = dict(zip(dlc_df["locality_id"].str.lower(), dlc_df["rate_per_sqm"]))
+    dlc_map = dict(zip(dlc_df["locality_id"].str.lower(), dlc_df["rate_per_sqm"], strict=False))
     city_median_dlc = dlc_df["rate_per_sqm"].median()
 
     loc_series = df["locality_id"].astype(str).str.lower()
@@ -50,7 +49,7 @@ def recalibrate_listings():
     # Overwrite clean parquet with recalibrated values
     df.to_parquet(clean_path, index=False)
 
-    print(f"Recalibration Complete:")
+    print("Recalibration Complete:")
     print(f"  - Total Listings: {len(df)}")
     print(f"  - RBI HPI Scaling Multiplier: {HPI_SCALING_FACTOR:.4f} (+32.0%)")
     print(

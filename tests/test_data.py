@@ -1,6 +1,5 @@
 """Unit tests for data normalization, cleaning, and schema validation."""
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -9,7 +8,7 @@ from jpi.data.clean import (
     parse_area_to_sqft,
     parse_price_to_inr,
 )
-from jpi.data.validate import clean_listing_schema, validate_dataset
+from jpi.data.validate import validate_dataset
 
 
 def test_unit_normalization_price():

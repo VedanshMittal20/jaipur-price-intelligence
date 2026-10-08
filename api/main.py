@@ -1,11 +1,10 @@
 """FastAPI application for the Jaipur Real Estate Price Intelligence Platform."""
 
 from contextlib import asynccontextmanager
-from typing import List, Optional
+from typing import List
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 from api.schemas import (
     CounterfactualResponse,
@@ -116,6 +115,7 @@ def evaluate_counterfactuals(
 
 # Mount static production web app if built
 from pathlib import Path
+
 from fastapi.staticfiles import StaticFiles
 
 dist_dir = Path(__file__).resolve().parent.parent / "web" / "dist"

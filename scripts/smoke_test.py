@@ -1,6 +1,5 @@
 """End-to-end smoke test benchmarking latency, memory consumption, and API endpoints."""
 
-import os
 import sys
 import time
 from pathlib import Path
@@ -133,7 +132,7 @@ def run_smoke_test():
         p99 = float(np.percentile(latencies_ms, 99))
         mean_lat = float(np.mean(latencies_ms))
 
-        print(f"Latency Results (100 Requests):")
+        print("Latency Results (100 Requests):")
         print(f"  - Mean Latency:  {mean_lat:.2f} ms")
         print(f"  - p50 Latency:   {p50:.2f} ms (Target: < 25 ms)")
         print(f"  - p95 Latency:   {p95:.2f} ms (Target: < 50 ms)")
@@ -141,7 +140,7 @@ def run_smoke_test():
 
         # 8. Memory Footprint Audit
         final_rss = psutil.Process().memory_info().rss / (1024 * 1024)
-        print(f"\nFinal Memory Footprint:")
+        print("\nFinal Memory Footprint:")
         print(f"  - Total RSS Memory: {final_rss:.1f} MB (Target: < 400 MB on 512 MB host)")
 
         # Verify SLO Constraints

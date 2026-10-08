@@ -2,8 +2,7 @@
 
 import json
 import re
-from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple
 
 import pandas as pd
 from rapidfuzz import fuzz, process

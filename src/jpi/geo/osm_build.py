@@ -1,12 +1,11 @@
 """Build and compile OpenStreetMap layers archive artifacts/geo/geo_layers.npz."""
 
-import json
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import numpy as np
 
-from jpi.config import ART, DATA, JAIPUR_BBOX
+from jpi.config import ART
 
 
 def densify_polyline(coords: List[Tuple[float, float]], step_m: float = 50.0) -> np.ndarray:

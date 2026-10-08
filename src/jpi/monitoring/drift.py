@@ -1,8 +1,7 @@
 """Covariate and target drift monitoring using Population Stability Index (PSI) and Wasserstein distance."""
 
 import json
-from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -127,7 +126,7 @@ def generate_drift_audit():
     # Format Markdown summary
     md_content = f"""# Data & Feature Drift Audit
 
-**Audit Status:** `{report["status"]}`  
+**Audit Status:** `{report["status"]}`
 **Features Audited:** {report["features_audited"]} | **Flagged Drift:** {report["features_flagged"]}
 
 ### Population Stability Index (PSI) Thresholds:

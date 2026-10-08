@@ -1,21 +1,17 @@
 """Data cleaning, unit normalisation, deduplication, and outlier filtering."""
 
-import json
 import re
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
 from jpi.config import (
     DATA,
-    JAIPUR_BBOX,
     MAX_AREA_SQFT,
     MAX_PPSF,
     MIN_AREA_SQFT,
     MIN_PPSF,
-    SEED,
 )
 
 

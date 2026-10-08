@@ -1,13 +1,12 @@
 """Unit tests for conformal prediction and exact multiplicative factor explanations."""
 
-import json
 import math
-import numpy as np
-import pytest
+
 import lightgbm as lgb
+import numpy as np
 
 from jpi.config import ART
-from jpi.models.conformal import MondrianConformalCalibrator, compute_conformal_halfwidth
+from jpi.models.conformal import MondrianConformalCalibrator
 from jpi.models.explain import explain_prediction
 
 

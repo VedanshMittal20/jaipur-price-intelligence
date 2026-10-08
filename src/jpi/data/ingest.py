@@ -1,15 +1,13 @@
 """Data ingestion pipeline from raw sources to canonical schema."""
 
 import hashlib
-import json
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import numpy as np
 import pandas as pd
 
-from jpi.config import DATA, SEED
+from jpi.config import DATA
 
 
 def make_listing_id(source: str, index: int) -> str:

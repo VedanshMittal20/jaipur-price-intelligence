@@ -1,6 +1,7 @@
 """Pydantic schemas for the Jaipur Price Intelligence API."""
 
 from typing import List, Optional
+
 from pydantic import BaseModel, Field, field_validator
 
 from jpi.config import JAIPUR_BBOX

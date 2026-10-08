@@ -1,8 +1,6 @@
 """In-memory model service supporting lean inference, conformal intervals, and explanations."""
 
 import json
-import math
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import joblib
@@ -66,7 +64,7 @@ class ModelService:
         self.dlc_map: Dict[str, float] = {}
         if dlc_path.exists():
             dlc_df = pd.read_csv(dlc_path)
-            self.dlc_map = dict(zip(dlc_df["locality_id"].str.lower(), dlc_df["rate_per_sqm"]))
+            self.dlc_map = dict(zip(dlc_df["locality_id"].str.lower(), dlc_df["rate_per_sqm"], strict=False))
 
         map_path = DATA / "external" / "locality_map.csv"
         self.locality_mapping: Dict[str, str] = {}

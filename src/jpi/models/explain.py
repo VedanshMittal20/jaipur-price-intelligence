@@ -24,7 +24,7 @@ def explain_prediction(
 
     # Group log contributions
     g_contrib: Dict[str, float] = {}
-    for name, v in zip(feature_names, c):
+    for name, v in zip(feature_names, c, strict=False):
         grp = groups.get(name, "Other")
         g_contrib[grp] = g_contrib.get(grp, 0.0) + float(v)
 
@@ -33,7 +33,7 @@ def explain_prediction(
 
     # Feature-level breakdown
     feat_effects = []
-    for name, v in zip(feature_names, c):
+    for name, v in zip(feature_names, c, strict=False):
         factor = float(np.exp(v))
         pct = float((factor - 1.0) * 100.0)
         feat_effects.append(

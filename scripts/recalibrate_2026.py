@@ -13,6 +13,7 @@ from jpi.config import DATA
 # Multiplier: 273.8 / 207.4 = 1.32015 (~32.0% appreciation)
 HPI_SCALING_FACTOR = 1.32015
 
+
 def recalibrate_listings():
     clean_path = DATA / "processed" / "listings_clean.parquet"
     dlc_path = DATA / "external" / "dlc_rates.csv"
@@ -52,10 +53,13 @@ def recalibrate_listings():
     print(f"Recalibration Complete:")
     print(f"  - Total Listings: {len(df)}")
     print(f"  - RBI HPI Scaling Multiplier: {HPI_SCALING_FACTOR:.4f} (+32.0%)")
-    print(f"  - Listings elevated by Statutory DLC Floor: {elevated_count} ({elevated_count/len(df)*100:.1f}%)")
-    print(f"  - New Mean Price: ₹{df['price_inr'].mean()/1e5:.2f} Lakh")
-    print(f"  - New Median Price: ₹{df['price_inr'].median()/1e5:.2f} Lakh")
+    print(
+        f"  - Listings elevated by Statutory DLC Floor: {elevated_count} ({elevated_count / len(df) * 100:.1f}%)"
+    )
+    print(f"  - New Mean Price: ₹{df['price_inr'].mean() / 1e5:.2f} Lakh")
+    print(f"  - New Median Price: ₹{df['price_inr'].median() / 1e5:.2f} Lakh")
     print(f"  - New Median Rate: ₹{int(df['ppsf'].median()):,}/sq ft")
+
 
 if __name__ == "__main__":
     recalibrate_listings()

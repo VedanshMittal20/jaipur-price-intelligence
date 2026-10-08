@@ -127,8 +127,8 @@ def generate_drift_audit():
     # Format Markdown summary
     md_content = f"""# Data & Feature Drift Audit
 
-**Audit Status:** `{report['status']}`  
-**Features Audited:** {report['features_audited']} | **Flagged Drift:** {report['features_flagged']}
+**Audit Status:** `{report["status"]}`  
+**Features Audited:** {report["features_audited"]} | **Flagged Drift:** {report["features_flagged"]}
 
 ### Population Stability Index (PSI) Thresholds:
 - **PSI < 0.10:** Stable (no significant distribution change)

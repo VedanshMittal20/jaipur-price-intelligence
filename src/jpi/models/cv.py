@@ -10,7 +10,9 @@ from sklearn.model_selection import GroupKFold, GroupShuffleSplit
 from jpi.config import DATA, SEED, SPATIAL_BLOCK_DEG
 
 
-def compute_spatial_blocks(lat: np.ndarray, lon: np.ndarray, size: float = SPATIAL_BLOCK_DEG) -> np.ndarray:
+def compute_spatial_blocks(
+    lat: np.ndarray, lon: np.ndarray, size: float = SPATIAL_BLOCK_DEG
+) -> np.ndarray:
     """Generate spatial block identifiers based on grid resolution (~2.2 km)."""
     lat_arr = np.asarray(lat, dtype=float)
     lon_arr = np.asarray(lon, dtype=float)
@@ -19,7 +21,9 @@ def compute_spatial_blocks(lat: np.ndarray, lon: np.ndarray, size: float = SPATI
     return np.char.add(np.char.add(b_lat, "_"), b_lon)
 
 
-def create_spatial_splits(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, List[Tuple[np.ndarray, np.ndarray]]]:
+def create_spatial_splits(
+    df: pd.DataFrame,
+) -> Tuple[pd.DataFrame, pd.DataFrame, List[Tuple[np.ndarray, np.ndarray]]]:
     """Partition dataset into untouched test set and 5-fold grouped CV training folds."""
     df = df.copy()
     blocks = compute_spatial_blocks(df["lat"].values, df["lon"].values)
@@ -46,8 +50,12 @@ def create_spatial_splits(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame,
 
     print(f"Spatial splitting complete:")
     print(f"  - Total blocks: {len(np.unique(blocks))}")
-    print(f"  - Training set: {len(df_train)} rows across {len(np.unique(df_train['spatial_block']))} blocks")
-    print(f"  - Held-out test set: {len(df_test)} rows across {len(np.unique(df_test['spatial_block']))} blocks")
+    print(
+        f"  - Training set: {len(df_train)} rows across {len(np.unique(df_train['spatial_block']))} blocks"
+    )
+    print(
+        f"  - Held-out test set: {len(df_test)} rows across {len(np.unique(df_test['spatial_block']))} blocks"
+    )
     print(f"  - Test IDs frozen to: {test_ids_file}")
 
     return df_train, df_test, train_folds

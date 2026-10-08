@@ -242,7 +242,9 @@ def build_and_save_geo_layers() -> Path:
 
     print(f"Serialized {len(layers)} geospatial layers to {out_file}:")
     for k, v in layers.items():
-        print(f"  - {k:15s}: {v.shape[0]:5d} points (bbox: [{v[:,0].min():.4f}, {v[:,1].min():.4f}] to [{v[:,0].max():.4f}, {v[:,1].max():.4f}])")
+        print(
+            f"  - {k:15s}: {v.shape[0]:5d} points (bbox: [{v[:, 0].min():.4f}, {v[:, 1].min():.4f}] to [{v[:, 0].max():.4f}, {v[:, 1].max():.4f}])"
+        )
 
     return out_file
 

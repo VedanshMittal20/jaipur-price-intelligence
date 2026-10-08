@@ -9,11 +9,15 @@ from jpi.config import JAIPUR_BBOX
 class PropertyRequest(BaseModel):
     """Input parameters for a single Jaipur property price estimation."""
 
-    area_sqft: float = Field(..., ge=100.0, le=20000.0, description="Total built-up/super area in square feet")
+    area_sqft: float = Field(
+        ..., ge=100.0, le=20000.0, description="Total built-up/super area in square feet"
+    )
     bhk: int = Field(..., ge=1, le=10, description="Number of bedrooms (BHK)")
     bathrooms: Optional[float] = Field(None, ge=1.0, le=12.0, description="Number of bathrooms")
     floor: Optional[int] = Field(1, ge=0, le=60, description="Floor level (0 = ground)")
-    total_floors: Optional[int] = Field(4, ge=1, le=60, description="Total number of floors in building")
+    total_floors: Optional[int] = Field(
+        4, ge=1, le=60, description="Total number of floors in building"
+    )
     property_type: str = Field("Apartment", description="Property type")
     furnishing: str = Field("Semi-Furnished", description="Furnishing state")
     possession_status: str = Field("Ready to Move", description="Possession readiness")
@@ -29,7 +33,9 @@ class PropertyRequest(BaseModel):
         if v is not None:
             min_lat, _, max_lat, _ = JAIPUR_BBOX
             if not (min_lat <= v <= max_lat):
-                raise ValueError(f"Latitude {v:.5f} is outside Jaipur bounding box [{min_lat}, {max_lat}]")
+                raise ValueError(
+                    f"Latitude {v:.5f} is outside Jaipur bounding box [{min_lat}, {max_lat}]"
+                )
         return v
 
     @field_validator("lon")
@@ -38,12 +44,15 @@ class PropertyRequest(BaseModel):
         if v is not None:
             _, min_lon, _, max_lon = JAIPUR_BBOX
             if not (min_lon <= v <= max_lon):
-                raise ValueError(f"Longitude {v:.5f} is outside Jaipur bounding box [{min_lon}, {max_lon}]")
+                raise ValueError(
+                    f"Longitude {v:.5f} is outside Jaipur bounding box [{min_lon}, {max_lon}]"
+                )
         return v
 
 
 class FeatureFactor(BaseModel):
     """Individual feature factor impact."""
+
     feature: str
     label: str
     factor: float
@@ -53,6 +62,7 @@ class FeatureFactor(BaseModel):
 
 class GroupFactor(BaseModel):
     """Aggregate group factor impact."""
+
     group: str
     factor: float
     effect_pct: float
@@ -61,6 +71,7 @@ class GroupFactor(BaseModel):
 
 class CounterfactualScenario(BaseModel):
     """Estimated value shift under a hypothetical property modification."""
+
     scenario_id: str
     title: str
     description: str
@@ -72,12 +83,14 @@ class CounterfactualScenario(BaseModel):
 
 class CounterfactualResponse(BaseModel):
     """Collection of what-if counterfactual scenario valuations."""
+
     baseline_estimate_inr: float
     scenarios: List[CounterfactualScenario]
 
 
 class PricePredictionResponse(BaseModel):
     """Complete price intelligence estimate with calibrated interval and exact factor breakdown."""
+
     estimate_inr: float
     estimate_ppsf: float
     interval_low_inr: float
@@ -97,6 +110,7 @@ class PricePredictionResponse(BaseModel):
 
 class LocalitySummary(BaseModel):
     """Micro-market locality profile and baseline statistics."""
+
     locality_id: str
     name: str
     lat: float
@@ -110,6 +124,7 @@ class LocalitySummary(BaseModel):
 
 class LocalityInsightResponse(BaseModel):
     """Grounded micro-market intelligence narrative derived purely from computed statistics."""
+
     locality_id: str
     name: str
     tier: str
@@ -127,6 +142,7 @@ class LocalityInsightResponse(BaseModel):
 
 class DealSummary(BaseModel):
     """Detected market listing priced below algorithmic fair valuation."""
+
     listing_id: str
     locality: str
     bhk: int
@@ -142,6 +158,7 @@ class DealSummary(BaseModel):
 
 class ModelMetaResponse(BaseModel):
     """Metadata regarding served model weights, metrics, and training provenance."""
+
     model_name: str
     model_version: str
     trained_at: str

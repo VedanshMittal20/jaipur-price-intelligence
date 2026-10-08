@@ -34,7 +34,9 @@ def run_smoke_test():
         assert resp_health.status_code == 200, f"Health check failed: {resp_health.text}"
         health_data = resp_health.json()
         print(f"\n[✓] GET /health: 200 OK ({t_health:.1f} ms)")
-        print(f"    Status: {health_data['status']} | Features Loaded: {health_data['features_loaded']}")
+        print(
+            f"    Status: {health_data['status']} | Features Loaded: {health_data['features_loaded']}"
+        )
 
         # 2. Metadata Endpoint
         t0 = time.perf_counter()
@@ -44,7 +46,9 @@ def run_smoke_test():
         meta_data = resp_meta.json()
         print(f"\n[✓] GET /meta/model: 200 OK ({t_meta:.1f} ms)")
         print(f"    Model: {meta_data['model_name']} v{meta_data['model_version']}")
-        print(f"    Holdout Spatial R²: {meta_data['test_r2']:.3f} | Spatial CV MAPE: {meta_data['spatial_cv_mape']*100:.2f}%")
+        print(
+            f"    Holdout Spatial R²: {meta_data['test_r2']:.3f} | Spatial CV MAPE: {meta_data['spatial_cv_mape'] * 100:.2f}%"
+        )
 
         # 3. Localities Endpoint
         t0 = time.perf_counter()
@@ -97,7 +101,13 @@ def run_smoke_test():
         print("-" * 50)
 
         latencies_ms = []
-        localities_sample = ["Mansarovar", "Vaishali Nagar", "Jagatpura", "C Scheme", "Malviya Nagar"]
+        localities_sample = [
+            "Mansarovar",
+            "Vaishali Nagar",
+            "Jagatpura",
+            "C Scheme",
+            "Malviya Nagar",
+        ]
         types_sample = ["Apartment", "Independent House", "Villa"]
 
         for i in range(100):

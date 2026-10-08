@@ -53,9 +53,7 @@ def evaluate_baseline_a0(
     oof_pred_log = np.full(len(df), np.nan)
 
     for tr, va in folds:
-        tr_df = pd.DataFrame(
-            {"loc": locs[tr], "ppsf": np.exp(y_log[tr]) / areas[tr]}
-        )
+        tr_df = pd.DataFrame({"loc": locs[tr], "ppsf": np.exp(y_log[tr]) / areas[tr]})
         global_med_ppsf = tr_df["ppsf"].median()
         loc_med_map = tr_df.groupby("loc")["ppsf"].median().to_dict()
 

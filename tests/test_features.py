@@ -32,7 +32,9 @@ def test_nearest_index_accuracy():
         q = queries[i]
         brute_dists = [haversine_ground_truth(q[0], q[1], t[0], t[1]) for t in targets]
         min_brute = min(brute_dists)
-        assert abs(tree_dists[i] - min_brute) < 1.0, "Tree distance differs from brute force by > 1m!"
+        assert abs(tree_dists[i] - min_brute) < 1.0, (
+            "Tree distance differs from brute force by > 1m!"
+        )
 
 
 def test_nearest_index_k_nearest_m():
@@ -57,11 +59,13 @@ def test_nearest_index_k_nearest_m():
 def test_nearest_index_with_index():
     """Verify nearest_with_index returns correct point indices."""
     np.random.seed(42)
-    targets = np.array([
-        [26.8500, 75.7600],
-        [26.9000, 75.7800],
-        [26.9500, 75.8000],
-    ])
+    targets = np.array(
+        [
+            [26.8500, 75.7600],
+            [26.9000, 75.7800],
+            [26.9500, 75.8000],
+        ]
+    )
     idx = NearestIndex(targets)
     # Query very close to point 1
     query = np.array([26.9001, 75.7801])
@@ -99,7 +103,9 @@ def test_leakage_audit_no_target_correlation():
         if np.std(vals) < 1e-6:
             continue
         corr = np.corrcoef(vals, target)[0, 1]
-        assert abs(corr) < 0.95, f"Leakage alert: feature '{col}' correlates {corr:.3f} with target!"
+        assert abs(corr) < 0.95, (
+            f"Leakage alert: feature '{col}' correlates {corr:.3f} with target!"
+        )
 
 
 def test_hand_check_landmarks_table():
@@ -126,8 +132,34 @@ def test_knn_price_feature_no_self_leakage():
 
     df = pd.DataFrame(
         {
-            "lat": [26.85, 26.86, 26.87, 26.88, 26.89, 26.90, 26.91, 26.92, 26.93, 26.94, 26.95, 26.96],
-            "lon": [75.75, 75.76, 75.77, 75.78, 75.79, 75.80, 75.81, 75.82, 75.83, 75.84, 75.85, 75.86],
+            "lat": [
+                26.85,
+                26.86,
+                26.87,
+                26.88,
+                26.89,
+                26.90,
+                26.91,
+                26.92,
+                26.93,
+                26.94,
+                26.95,
+                26.96,
+            ],
+            "lon": [
+                75.75,
+                75.76,
+                75.77,
+                75.78,
+                75.79,
+                75.80,
+                75.81,
+                75.82,
+                75.83,
+                75.84,
+                75.85,
+                75.86,
+            ],
             "area_sqft": [1000.0] * 12,
         }
     )
@@ -147,11 +179,13 @@ def test_knn_price_feature_no_self_leakage():
 
 def test_nearest_index_query_radius_distances():
     """Verify query_radius_distances returns correct sorted distances within threshold."""
-    targets = np.array([
-        [26.8500, 75.7600],
-        [26.8520, 75.7620],
-        [26.9500, 75.8000],  # far away (~11 km)
-    ])
+    targets = np.array(
+        [
+            [26.8500, 75.7600],
+            [26.8520, 75.7620],
+            [26.9500, 75.8000],  # far away (~11 km)
+        ]
+    )
     idx = NearestIndex(targets)
     query = np.array([[26.8500, 75.7600]])
 
@@ -166,10 +200,12 @@ def test_nearest_index_query_radius_distances():
 
 def test_nearest_index_exponential_decay_score():
     """Verify exponential_decay_score computes accurate distance-decayed kernel density."""
-    targets = np.array([
-        [26.8500, 75.7600],
-        [26.8500, 75.7600],  # collocated
-    ])
+    targets = np.array(
+        [
+            [26.8500, 75.7600],
+            [26.8500, 75.7600],  # collocated
+        ]
+    )
     idx = NearestIndex(targets)
     # Query collocated on both points: d=0 for both points => exp(0) + exp(0) = 2.0
     query = np.array([[26.8500, 75.7600]])

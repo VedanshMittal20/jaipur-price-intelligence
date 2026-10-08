@@ -127,7 +127,9 @@ def flag_outliers(df: pd.DataFrame) -> pd.DataFrame:
         return 0.6745 * (s - med) / mad
 
     z_scores = df.groupby("locality_id", group_keys=False)["log_ppsf"].apply(robust_z)
-    is_statistical_outlier = (z_scores.abs() > 3.5) | (df["ppsf"] < MIN_PPSF) | (df["ppsf"] > MAX_PPSF)
+    is_statistical_outlier = (
+        (z_scores.abs() > 3.5) | (df["ppsf"] < MIN_PPSF) | (df["ppsf"] > MAX_PPSF)
+    )
 
     df["is_outlier"] = is_hard_outlier | is_statistical_outlier
     return df
@@ -141,6 +143,7 @@ def clean_and_process_all() -> pd.DataFrame:
 
     if not interim_path.exists():
         from jpi.data.ingest import ingest_all
+
         df = ingest_all()
     else:
         df = pd.read_parquet(interim_path)
@@ -150,6 +153,7 @@ def clean_and_process_all() -> pd.DataFrame:
 
     # 2. Locality mapping & Geocoding
     from jpi.data.locality import resolve_localities_and_coords
+
     df = resolve_localities_and_coords(df)
 
     # 3. Flag Outliers

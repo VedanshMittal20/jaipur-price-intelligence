@@ -90,7 +90,9 @@ class ModelService:
         self.localities_cache: List[LocalitySummary] = []
         self.deals_cache: List[DealSummary] = []
         self.insights_cache: Dict[str, LocalityInsightResponse] = {}
-        self.df_feat: pd.DataFrame = pd.read_parquet(feat_path) if feat_path.exists() else pd.DataFrame()
+        self.df_feat: pd.DataFrame = (
+            pd.read_parquet(feat_path) if feat_path.exists() else pd.DataFrame()
+        )
 
         if clean_path.exists():
             df_clean = pd.read_parquet(clean_path)
@@ -109,9 +111,7 @@ class ModelService:
             .replace(".", "")
         )
 
-    def _resolve_coordinates(
-        self, req: PropertyRequest
-    ) -> Tuple[float, float, str, str]:
+    def _resolve_coordinates(self, req: PropertyRequest) -> Tuple[float, float, str, str]:
         """Resolve (lat, lon, locality_id, coord_precision) from request."""
         norm_loc = self._normalize_locality(req.locality)
 
@@ -128,8 +128,10 @@ class ModelService:
                 # Find nearest locality centroid
                 best_loc = min(
                     self.geocode_cache.keys(),
-                    key=lambda k: (self.geocode_cache[k]["lat"] - lat) ** 2
-                    + (self.geocode_cache[k]["lon"] - lon) ** 2,
+                    key=lambda k: (
+                        (self.geocode_cache[k]["lat"] - lat) ** 2
+                        + (self.geocode_cache[k]["lon"] - lon) ** 2
+                    ),
                 )
                 loc_id = norm_loc or best_loc
             return lat, lon, loc_id, "exact"
@@ -175,7 +177,10 @@ class ModelService:
             "rera_flag": bool(req.rera_flag),
             "property_type": req.property_type.strip().lower().replace(" ", "_").replace("-", "_"),
             "furnishing": req.furnishing.strip().lower().replace(" ", "_").replace("-", "_"),
-            "possession_status": req.possession_status.strip().lower().replace(" ", "_").replace("-", "_"),
+            "possession_status": req.possession_status.strip()
+            .lower()
+            .replace(" ", "_")
+            .replace("-", "_"),
             "posted_by": req.posted_by.strip().lower().replace(" ", "_").replace("-", "_"),
             "locality_id": loc_id,
             "coord_precision": precision,
@@ -256,57 +261,69 @@ class ModelService:
 
         # 1. Furnishing Upgrade
         if req.furnishing != "Furnished":
-            scenarios_to_test.append({
-                "id": "furnishing_upgrade",
-                "title": "Full Turnkey Furnishing",
-                "desc": "Upgrade interior woodwork and furnishings to fully furnished state.",
-                "updates": {"furnishing": "Furnished"}
-            })
+            scenarios_to_test.append(
+                {
+                    "id": "furnishing_upgrade",
+                    "title": "Full Turnkey Furnishing",
+                    "desc": "Upgrade interior woodwork and furnishings to fully furnished state.",
+                    "updates": {"furnishing": "Furnished"},
+                }
+            )
 
         # 2. Add extra bathroom
         current_baths = req.bathrooms if req.bathrooms is not None else req.bhk
-        scenarios_to_test.append({
-            "id": "add_bathroom",
-            "title": "Additional Bathroom",
-            "desc": f"Add an extra bathroom to the layout ({int(current_baths)} -> {int(current_baths + 1)}).",
-            "updates": {"bathrooms": current_baths + 1}
-        })
+        scenarios_to_test.append(
+            {
+                "id": "add_bathroom",
+                "title": "Additional Bathroom",
+                "desc": f"Add an extra bathroom to the layout ({int(current_baths)} -> {int(current_baths + 1)}).",
+                "updates": {"bathrooms": current_baths + 1},
+            }
+        )
 
         # 3. Add 200 sq ft Area
-        scenarios_to_test.append({
-            "id": "expand_area",
-            "title": "Built-up Area Expansion (+200 sq ft)",
-            "desc": f"Expand total usable space from {int(req.area_sqft)} to {int(req.area_sqft + 200)} sq ft.",
-            "updates": {"area_sqft": req.area_sqft + 200.0}
-        })
+        scenarios_to_test.append(
+            {
+                "id": "expand_area",
+                "title": "Built-up Area Expansion (+200 sq ft)",
+                "desc": f"Expand total usable space from {int(req.area_sqft)} to {int(req.area_sqft + 200)} sq ft.",
+                "updates": {"area_sqft": req.area_sqft + 200.0},
+            }
+        )
 
         # 4. Ready to move possession
         if req.possession_status != "Ready to Move":
-            scenarios_to_test.append({
-                "id": "possession_ready",
-                "title": "Ready to Move Completion",
-                "desc": "Eliminate under-construction delay risk and obtain occupancy certificate.",
-                "updates": {"possession_status": "Ready to Move"}
-            })
+            scenarios_to_test.append(
+                {
+                    "id": "possession_ready",
+                    "title": "Ready to Move Completion",
+                    "desc": "Eliminate under-construction delay risk and obtain occupancy certificate.",
+                    "updates": {"possession_status": "Ready to Move"},
+                }
+            )
 
         # 5. RERA Sanction
         if req.rera_flag == 0:
-            scenarios_to_test.append({
-                "id": "rera_sanction",
-                "title": "RERA Registration Sanction",
-                "desc": "Formalize project approval under Rajasthan RERA authority.",
-                "updates": {"rera_flag": 1}
-            })
+            scenarios_to_test.append(
+                {
+                    "id": "rera_sanction",
+                    "title": "RERA Registration Sanction",
+                    "desc": "Formalize project approval under Rajasthan RERA authority.",
+                    "updates": {"rera_flag": 1},
+                }
+            )
 
         # 6. Floor Elevation
         current_floor = req.floor if req.floor is not None else 1
         if current_floor < 3:
-            scenarios_to_test.append({
-                "id": "mid_floor",
-                "title": "Mid-Level Elevation (Floor 3)",
-                "desc": "Elevate to mid-floor level away from ground noise and dust.",
-                "updates": {"floor": 3}
-            })
+            scenarios_to_test.append(
+                {
+                    "id": "mid_floor",
+                    "title": "Mid-Level Elevation (Floor 3)",
+                    "desc": "Elevate to mid-floor level away from ground noise and dust.",
+                    "updates": {"floor": 3},
+                }
+            )
 
         scenario_results = []
         for s in scenarios_to_test:
@@ -396,27 +413,39 @@ class ModelService:
                     if "dist_primary_road_m" in sub_feat.columns:
                         road_m = round(float(sub_feat["dist_primary_road_m"].median()), 0)
                     amenities_cnt = int(
-                        float(sub_feat.get("n_school_1000m", pd.Series([0])).median()) +
-                        float(sub_feat.get("n_hospital_1000m", pd.Series([0])).median()) +
-                        float(sub_feat.get("n_shop_1000m", pd.Series([0])).median())
+                        float(sub_feat.get("n_school_1000m", pd.Series([0])).median())
+                        + float(sub_feat.get("n_hospital_1000m", pd.Series([0])).median())
+                        + float(sub_feat.get("n_shop_1000m", pd.Series([0])).median())
                     )
 
             drivers = [
-                f"Median valuation: ₹{med_price/100_000:.1f} Lakh (₹{int(med_ppsf):,}/sq ft) across {c} market listings",
+                f"Median valuation: ₹{med_price / 100_000:.1f} Lakh (₹{int(med_ppsf):,}/sq ft) across {c} market listings",
             ]
             if ratio:
-                drivers.append(f"Trades at {ratio:.2f}x government statutory DLC circle rate (₹{int(dlc_rate):,}/sq m)")
+                drivers.append(
+                    f"Trades at {ratio:.2f}x government statutory DLC circle rate (₹{int(dlc_rate):,}/sq m)"
+                )
             if metro_km is not None:
                 drivers.append(f"Positioned {metro_km} km from the nearest Jaipur Metro line")
             if amenities_cnt > 0:
-                drivers.append(f"{amenities_cnt} verified local schools, hospitals, and retail amenities within 1,000m")
+                drivers.append(
+                    f"{amenities_cnt} verified local schools, hospitals, and retail amenities within 1,000m"
+                )
 
             name_title = str(loc_id).replace("_", " ").title()
-            ratio_text = f", trading at a {ratio:.2f}x multiplier against official Rajasthan DLC circle rates" if ratio else ""
-            metro_text = f" Positioned within {metro_km} km of the metro network with {amenities_cnt} local neighborhood amenities." if metro_km else ""
+            ratio_text = (
+                f", trading at a {ratio:.2f}x multiplier against official Rajasthan DLC circle rates"
+                if ratio
+                else ""
+            )
+            metro_text = (
+                f" Positioned within {metro_km} km of the metro network with {amenities_cnt} local neighborhood amenities."
+                if metro_km
+                else ""
+            )
             narrative = (
                 f"{name_title} is categorized as an {tier} residential hub with a median asking price of "
-                f"₹{med_price/100_000:.1f} Lakh (₹{int(med_ppsf):,}/sq ft){ratio_text}.{metro_text}"
+                f"₹{med_price / 100_000:.1f} Lakh (₹{int(med_ppsf):,}/sq ft){ratio_text}.{metro_text}"
             )
 
             self.insights_cache[str(loc_id).lower()] = LocalityInsightResponse(
@@ -458,7 +487,15 @@ class ModelService:
             return
 
         df_feat = pd.read_parquet(features_path)
-        drop_cols = ["price_inr", "log_price", "listing_id", "lat", "lon", "spatial_block", "spatio_temporal"]
+        drop_cols = [
+            "price_inr",
+            "log_price",
+            "listing_id",
+            "lat",
+            "lon",
+            "spatial_block",
+            "spatio_temporal",
+        ]
         X_cols = [c for c in df_feat.columns if c not in drop_cols]
 
         preds_log = self.booster.predict(df_feat[X_cols])
@@ -470,7 +507,9 @@ class ModelService:
         deals = []
         for i in range(len(df_clean)):
             disc = discounts[i]
-            if disc <= -15.0 and actual_prices[i] >= 1_500_000:  # At least 15% underpriced & realistic
+            if (
+                disc <= -15.0 and actual_prices[i] >= 1_500_000
+            ):  # At least 15% underpriced & realistic
                 row = df_clean.iloc[i]
                 deals.append(
                     DealSummary(

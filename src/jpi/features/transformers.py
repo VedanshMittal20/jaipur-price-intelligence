@@ -36,7 +36,9 @@ class KNNPriceFeature(BaseEstimator, TransformerMixin):
         self.log_ppsf_ = y_arr - np.log(area_arr)
         return self
 
-    def fit_transform(self, X: pd.DataFrame, y: Optional[Union[np.ndarray, pd.Series]] = None, **kw) -> np.ndarray:
+    def fit_transform(
+        self, X: pd.DataFrame, y: Optional[Union[np.ndarray, pd.Series]] = None, **kw
+    ) -> np.ndarray:
         self.fit(X, y)
         assert self.tree_ is not None
         _, idx = self.tree_.query(self._pts(X), k=self.k + 1)

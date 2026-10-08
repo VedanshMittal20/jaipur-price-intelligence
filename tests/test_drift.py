@@ -26,14 +26,18 @@ def test_psi_shifted_distribution():
 
 def test_calculate_drift_report():
     """Drift report accurately evaluates DataFrame columns."""
-    df_ref = pd.DataFrame({
-        "area": [1000, 1200, 1400, 1600, 1800] * 20,
-        "bhk": [2, 2, 3, 3, 4] * 20,
-    })
-    df_cur = pd.DataFrame({
-        "area": [1000, 1200, 1400, 1600, 1800] * 20,
-        "bhk": [2, 2, 3, 3, 4] * 20,
-    })
+    df_ref = pd.DataFrame(
+        {
+            "area": [1000, 1200, 1400, 1600, 1800] * 20,
+            "bhk": [2, 2, 3, 3, 4] * 20,
+        }
+    )
+    df_cur = pd.DataFrame(
+        {
+            "area": [1000, 1200, 1400, 1600, 1800] * 20,
+            "bhk": [2, 2, 3, 3, 4] * 20,
+        }
+    )
 
     report = calculate_drift_report(df_ref, df_cur, ["area", "bhk"])
     assert report["status"] == "PASS"

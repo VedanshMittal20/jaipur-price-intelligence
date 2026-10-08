@@ -9,7 +9,9 @@ import numpy as np
 from jpi.config import ART, INTERVAL_ALPHA
 
 
-def compute_conformal_halfwidth(y_log: np.ndarray, pred_log: np.ndarray, alpha: float = INTERVAL_ALPHA) -> float:
+def compute_conformal_halfwidth(
+    y_log: np.ndarray, pred_log: np.ndarray, alpha: float = INTERVAL_ALPHA
+) -> float:
     """Calculate finite-sample calibrated conformal halfwidth on log residuals."""
     residuals = np.abs(np.asarray(y_log, dtype=float) - np.asarray(pred_log, dtype=float))
     n = len(residuals)
@@ -63,7 +65,9 @@ class MondrianConformalCalibrator:
         high_inr = float(np.exp(pred_log + hw))
         return low_inr, point_inr, high_inr
 
-    def evaluate_coverage(self, y_log_test: np.ndarray, pred_log_test: np.ndarray) -> Dict[str, float]:
+    def evaluate_coverage(
+        self, y_log_test: np.ndarray, pred_log_test: np.ndarray
+    ) -> Dict[str, float]:
         """Evaluate empirical coverage on untouched test set."""
         y_test = np.exp(np.asarray(y_log_test, dtype=float))
         p_test = np.asarray(pred_log_test, dtype=float)
@@ -90,9 +94,15 @@ class MondrianConformalCalibrator:
         return {
             "nominal_coverage": 1.0 - self.alpha,
             "overall_empirical_coverage": overall_coverage,
-            "low_tier_coverage": float(np.mean(covered[t1])) if np.sum(t1) > 0 else overall_coverage,
-            "mid_tier_coverage": float(np.mean(covered[t2])) if np.sum(t2) > 0 else overall_coverage,
-            "high_tier_coverage": float(np.mean(covered[t3])) if np.sum(t3) > 0 else overall_coverage,
+            "low_tier_coverage": float(np.mean(covered[t1]))
+            if np.sum(t1) > 0
+            else overall_coverage,
+            "mid_tier_coverage": float(np.mean(covered[t2]))
+            if np.sum(t2) > 0
+            else overall_coverage,
+            "high_tier_coverage": float(np.mean(covered[t3]))
+            if np.sum(t3) > 0
+            else overall_coverage,
         }
 
     def save(self, path: Optional[Path] = None):

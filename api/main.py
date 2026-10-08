@@ -76,7 +76,9 @@ def list_localities(service: ModelService = Depends(get_service)):
     return service.get_localities()
 
 
-@app.get("/localities/{locality_id}/insight", response_model=LocalityInsightResponse, tags=["Geospatial"])
+@app.get(
+    "/localities/{locality_id}/insight", response_model=LocalityInsightResponse, tags=["Geospatial"]
+)
 def get_locality_insight(
     locality_id: str,
     service: ModelService = Depends(get_service),
@@ -119,4 +121,3 @@ from fastapi.staticfiles import StaticFiles
 dist_dir = Path(__file__).resolve().parent.parent / "web" / "dist"
 if dist_dir.exists():
     app.mount("/", StaticFiles(directory=str(dist_dir), html=True), name="static")
-

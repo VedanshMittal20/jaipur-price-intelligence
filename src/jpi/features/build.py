@@ -136,14 +136,20 @@ class FeaturePipeline:
         # Fit TargetEncoder for Spatio-Temporal encoding
         if y is not None:
             # Combine locality and possession_status (time)
-            poss = df["possession_status"].astype(str) if "possession_status" in df else pd.Series([""] * len(df), index=df.index)
+            poss = (
+                df["possession_status"].astype(str)
+                if "possession_status" in df
+                else pd.Series([""] * len(df), index=df.index)
+            )
             st = (df["locality_id"].astype(str) + "_" + poss).to_frame("spatio_temporal")
             self.te_.fit(st, y)
 
         # Load DLC map
         dlc_df = load_dlc_table()
         if not dlc_df.empty:
-            self.dlc_map_ = dict(zip(dlc_df["locality_id"].str.lower(), dlc_df["rate_per_sqm"].astype(float)))
+            self.dlc_map_ = dict(
+                zip(dlc_df["locality_id"].str.lower(), dlc_df["rate_per_sqm"].astype(float))
+            )
 
         # Learn categorical vocabularies
         for col in CATEGORICAL_COLS:
@@ -212,7 +218,11 @@ class FeaturePipeline:
         out["dlc_missing"] = dlc_rates.isna().astype(float)
 
         # 4. Spatio-Temporal Target Encoding
-        poss = df["possession_status"].astype(str) if "possession_status" in df else pd.Series([""] * len(df), index=df.index)
+        poss = (
+            df["possession_status"].astype(str)
+            if "possession_status" in df
+            else pd.Series([""] * len(df), index=df.index)
+        )
         st = (df["locality_id"].astype(str) + "_" + poss).to_frame("spatio_temporal")
         out["spatio_temporal"] = st["spatio_temporal"]
         try:

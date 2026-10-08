@@ -27,6 +27,7 @@ def train_and_evaluate_all():
 
     # 1.5 Fix Target Leakage: Recompute spatio_temporal_te out-of-fold for CV
     from sklearn.preprocessing import TargetEncoder
+
     cv_te = np.zeros(len(df_train))
     y_train_log = df_train["log_price"].values
     st_train = df_train[["spatio_temporal"]]
@@ -41,7 +42,15 @@ def train_and_evaluate_all():
     df_test["spatio_temporal_te"] = te_full.transform(df_test[["spatio_temporal"]]).flatten()
 
     # Separate target and features
-    drop_cols = ["price_inr", "log_price", "listing_id", "lat", "lon", "spatial_block", "spatio_temporal"]
+    drop_cols = [
+        "price_inr",
+        "log_price",
+        "listing_id",
+        "lat",
+        "lon",
+        "spatial_block",
+        "spatio_temporal",
+    ]
     feature_cols = [c for c in df_train.columns if c not in drop_cols]
 
     X_train = df_train[feature_cols]
@@ -54,14 +63,18 @@ def train_and_evaluate_all():
     # 2. Baseline A0 (M2)
     print("\n--- Evaluating Baseline A0 ---")
     _, a0_metrics = evaluate_baseline_a0(df_train, folds)
-    print(f"Baseline A0 (Locality Median): MAPE = {a0_metrics['mape']*100:.2f}%, R2 = {a0_metrics['r2_log']:.3f}")
+    print(
+        f"Baseline A0 (Locality Median): MAPE = {a0_metrics['mape'] * 100:.2f}%, R2 = {a0_metrics['r2_log']:.3f}"
+    )
     results_data["a0"] = a0_metrics
 
     # 3. Model Ladder (M3)
     print("\n--- Model Ladder Comparison (Grouped Spatial-CV) ---")
     models = {
         "Ridge": lambda: Ridge(alpha=10.0),
-        "RandomForest": lambda: RandomForestRegressor(n_estimators=100, max_depth=12, random_state=SEED, n_jobs=-1),
+        "RandomForest": lambda: RandomForestRegressor(
+            n_estimators=100, max_depth=12, random_state=SEED, n_jobs=-1
+        ),
         "LightGBM": lambda: lgb.LGBMRegressor(
             n_estimators=150,
             learning_rate=0.05,
@@ -79,7 +92,9 @@ def train_and_evaluate_all():
         oof = oof_predict(make_fn, X_train, y_train_log, folds)
         m = price_metrics(y_train_log, oof)
         ladder_results[name] = m
-        print(f"  {name:15s}: MAPE = {m['mape']*100:.2f}%, MedAPE = {m['median_ape']*100:.2f}%, R2 = {m['r2_log']:.3f}")
+        print(
+            f"  {name:15s}: MAPE = {m['mape'] * 100:.2f}%, MedAPE = {m['median_ape'] * 100:.2f}%, R2 = {m['r2_log']:.3f}"
+        )
 
     results_data["ladder"] = ladder_results
 
@@ -90,30 +105,57 @@ def train_and_evaluate_all():
     m_random = price_metrics(y_train_log, oof_random)
     m_spatial = ladder_results["LightGBM"]
     leakage_gap = m_spatial["mape"] - m_random["mape"]
-    print(f"\nSpatial-CV MAPE: {m_spatial['mape']*100:.2f}% vs Random-CV MAPE: {m_random['mape']*100:.2f}% (Leakage Gap: +{leakage_gap*100:.2f}%)")
+    print(
+        f"\nSpatial-CV MAPE: {m_spatial['mape'] * 100:.2f}% vs Random-CV MAPE: {m_random['mape'] * 100:.2f}% (Leakage Gap: +{leakage_gap * 100:.2f}%)"
+    )
     results_data["random_cv"] = m_random
     results_data["leakage_gap_pct"] = float(leakage_gap * 100.0)
 
     # 4. Feature Ablation Study (M5)
     print("\n--- Feature Ablation Study ---")
     prop_cols = [
-        "area_sqft", "bhk", "bathrooms", "bath_per_bhk", "floor",
-        "rera_flag", "property_type", "furnishing", "possession_status", "posted_by"
+        "area_sqft",
+        "bhk",
+        "bathrooms",
+        "bath_per_bhk",
+        "floor",
+        "rera_flag",
+        "property_type",
+        "furnishing",
+        "possession_status",
+        "posted_by",
     ]
     geo_dist_cols = [
-        "dist_metro_m", "dist_rail_m", "dist_airport_m", "dist_primary_road_m", "dist_cbd_m"
+        "dist_metro_m",
+        "dist_rail_m",
+        "dist_airport_m",
+        "dist_primary_road_m",
+        "dist_cbd_m",
     ]
     geo_amenity_cols = [
-        "dist_hospital_m", "dist_school_m", "dist_mall_m", "dist_park_m",
-        "n_school_1000m", "n_hospital_1000m", "n_restaurant_1000m", "n_shop_1000m"
+        "dist_hospital_m",
+        "dist_school_m",
+        "dist_mall_m",
+        "dist_park_m",
+        "n_school_1000m",
+        "n_hospital_1000m",
+        "n_restaurant_1000m",
+        "n_shop_1000m",
     ]
     dlc_cols = ["dlc_rate_per_sqm", "dlc_missing"]
 
     ablation_sets = {
         "A1_Property_Only": prop_cols,
         "A2_Plus_Locality": prop_cols + ["locality_id", "coord_precision", "spatio_temporal_te"],
-        "A3_Plus_Geo": prop_cols + ["locality_id", "coord_precision", "spatio_temporal_te"] + geo_dist_cols + geo_amenity_cols,
-        "A4_Plus_DLC": prop_cols + ["locality_id", "coord_precision", "spatio_temporal_te"] + geo_dist_cols + geo_amenity_cols + dlc_cols,
+        "A3_Plus_Geo": prop_cols
+        + ["locality_id", "coord_precision", "spatio_temporal_te"]
+        + geo_dist_cols
+        + geo_amenity_cols,
+        "A4_Plus_DLC": prop_cols
+        + ["locality_id", "coord_precision", "spatio_temporal_te"]
+        + geo_dist_cols
+        + geo_amenity_cols
+        + dlc_cols,
     }
 
     ablation_results = {}
@@ -122,11 +164,17 @@ def train_and_evaluate_all():
         oof = oof_predict(models["LightGBM"], sub_X, y_train_log, folds)
         m = price_metrics(y_train_log, oof)
         ablation_results[vname] = m
-        print(f"  {vname:20s}: MAPE = {m['mape']*100:.2f}%, MedAPE = {m['median_ape']*100:.2f}%, R2 = {m['r2_log']:.3f}")
+        print(
+            f"  {vname:20s}: MAPE = {m['mape'] * 100:.2f}%, MedAPE = {m['median_ape'] * 100:.2f}%, R2 = {m['r2_log']:.3f}"
+        )
 
     results_data["ablation"] = ablation_results
-    geo_lift = ablation_results["A2_Plus_Locality"]["mape"] - ablation_results["A3_Plus_Geo"]["mape"]
-    print(f"Geospatial Feature Lift (A2 -> A3 error reduction): {geo_lift*100:.2f} percentage points!")
+    geo_lift = (
+        ablation_results["A2_Plus_Locality"]["mape"] - ablation_results["A3_Plus_Geo"]["mape"]
+    )
+    print(
+        f"Geospatial Feature Lift (A2 -> A3 error reduction): {geo_lift * 100:.2f} percentage points!"
+    )
     results_data["geo_lift_pct"] = float(geo_lift * 100.0)
 
     # 5. Conformal Calibration on OOF Residuals (M6)
@@ -135,7 +183,9 @@ def train_and_evaluate_all():
     calibrator = MondrianConformalCalibrator()
     calibrator.fit(y_train_log, oof_best)
     calibrator.save(ART / "model" / "conformal.json")
-    print(f"Fitted Conformal Halfwidths: Global={calibrator.global_halfwidth:.3f}, Terciles={calibrator.tercile_halfwidths}")
+    print(
+        f"Fitted Conformal Halfwidths: Global={calibrator.global_halfwidth:.3f}, Terciles={calibrator.tercile_halfwidths}"
+    )
 
     # 6. Fit Production Model & Benchmark
     print("\n--- Fitting Production Booster & Exporting ---")
@@ -159,19 +209,21 @@ def train_and_evaluate_all():
     print("\n--- Final Single Evaluation on Untouched Test Set (M8) ---")
     test_pred_log = booster.predict(X_test)
     test_metrics = price_metrics(y_test_log, test_pred_log)
-    print(f"Test MAPE:      {test_metrics['mape']*100:.2f}% (Target <= 20%)")
-    print(f"Test MedianAPE: {test_metrics['median_ape']*100:.2f}%")
+    print(f"Test MAPE:      {test_metrics['mape'] * 100:.2f}% (Target <= 20%)")
+    print(f"Test MedianAPE: {test_metrics['median_ape'] * 100:.2f}%")
     print(f"Test R2 (log):  {test_metrics['r2_log']:.3f} (Target >= 0.75)")
     print(f"Test MAE (INR): ₹{test_metrics['mae_inr']:,.0f}")
     print(f"Test RMSE(INR): ₹{test_metrics['rmse_inr']:,.0f}")
 
     # Coverage on test set
     coverage_results = calibrator.evaluate_coverage(y_test_log, test_pred_log)
-    print(f"Nominal Coverage:   {coverage_results['nominal_coverage']*100:.1f}%")
-    print(f"Empirical Coverage: {coverage_results['overall_empirical_coverage']*100:.1f}% (Target 75-85%)")
-    print(f"  - Low Tier:  {coverage_results['low_tier_coverage']*100:.1f}%")
-    print(f"  - Mid Tier:  {coverage_results['mid_tier_coverage']*100:.1f}%")
-    print(f"  - High Tier: {coverage_results['high_tier_coverage']*100:.1f}%")
+    print(f"Nominal Coverage:   {coverage_results['nominal_coverage'] * 100:.1f}%")
+    print(
+        f"Empirical Coverage: {coverage_results['overall_empirical_coverage'] * 100:.1f}% (Target 75-85%)"
+    )
+    print(f"  - Low Tier:  {coverage_results['low_tier_coverage'] * 100:.1f}%")
+    print(f"  - Mid Tier:  {coverage_results['mid_tier_coverage'] * 100:.1f}%")
+    print(f"  - High Tier: {coverage_results['high_tier_coverage'] * 100:.1f}%")
 
     results_data["test_metrics"] = test_metrics
     results_data["coverage"] = coverage_results

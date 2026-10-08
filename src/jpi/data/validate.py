@@ -18,9 +18,7 @@ clean_listing_schema = pa.DataFrameSchema(
         "bathrooms": pa.Column(float, nullable=True),
         "property_type": pa.Column(
             str,
-            pa.Check.isin(
-                ["apartment", "independent_house", "villa", "builder_floor", "other"]
-            ),
+            pa.Check.isin(["apartment", "independent_house", "villa", "builder_floor", "other"]),
         ),
         "locality_id": pa.Column(str, nullable=False),
         "lat": pa.Column(float, nullable=False),
@@ -35,7 +33,16 @@ clean_listing_schema = pa.DataFrameSchema(
 def validate_dataset(df: pd.DataFrame) -> pd.DataFrame:
     """Validate DataFrame against canonical clean schema and assert quality checks."""
     # Assert no personal-data columns exist BEFORE schema validation
-    banned_cols = ["name", "owner_name", "phone", "email", "contact", "address", "property_link", "property_description"]
+    banned_cols = [
+        "name",
+        "owner_name",
+        "phone",
+        "email",
+        "contact",
+        "address",
+        "property_link",
+        "property_description",
+    ]
     for col in df.columns:
         assert col.lower() not in banned_cols, f"Security Violation: PII column '{col}' detected!"
 

@@ -85,7 +85,9 @@ def test_predict_success_with_locality(client):
     assert res["estimate_inr"] > 1_000_000
     assert res["interval_low_inr"] < res["estimate_inr"] < res["interval_high_inr"]
     assert res["interval_low_ppsf"] < res["estimate_ppsf"] < res["interval_high_ppsf"]
-    assert pytest.approx(res["estimate_ppsf"], rel=1e-3) == res["estimate_inr"] / payload["area_sqft"]
+    assert (
+        pytest.approx(res["estimate_ppsf"], rel=1e-3) == res["estimate_inr"] / payload["area_sqft"]
+    )
     assert res["coord_precision"] == "locality_centroid"
     assert len(res["factors"]) > 0
     assert len(res["groups"]) > 0
@@ -198,5 +200,3 @@ def test_predict_resolves_locality_alias(client):
     assert res["locality"] == "Mansarovar"
     assert res["estimate_inr"] > 1_000_000
     assert res["coord_precision"] == "locality_centroid"
-
-

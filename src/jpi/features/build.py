@@ -148,7 +148,11 @@ class FeaturePipeline:
         dlc_df = load_dlc_table()
         if not dlc_df.empty:
             self.dlc_map_ = dict(
-                zip(dlc_df["locality_id"].str.lower(), dlc_df["rate_per_sqm"].astype(float), strict=False)
+                zip(
+                    dlc_df["locality_id"].str.lower(),
+                    dlc_df["rate_per_sqm"].astype(float),
+                    strict=False,
+                )
             )
 
         # Learn categorical vocabularies

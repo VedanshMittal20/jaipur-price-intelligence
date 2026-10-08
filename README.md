@@ -166,6 +166,56 @@ curl -X POST "http://127.0.0.1:8000/predict" \
 
 ---
 
+---
+
+## Git Workflow & Contribution Guide (Uploads, Pulls, Pushes)
+
+This repository follows a structured Git workflow to ensure daily changes are tracked cleanly.
+
+### 1. Pulling Latest Changes
+Before starting everyday work, ensure your local repository is up to date:
+```bash
+# Pull the latest changes from the main branch
+git pull origin main
+```
+
+### 2. Making and Staging Changes (Uploads)
+After modifying code or data, check the status and add your files to the staging area:
+```bash
+# See what files were modified
+git status
+
+# Add specific files
+git add path/to/file.py
+
+# Or add all modified files in the directory
+git add .
+```
+
+### 3. Committing Changes (Proper Syntax)
+We use [Conventional Commits](https://www.conventionalcommits.org/). Commit messages must have a type and a brief description:
+```bash
+git commit -m "type(scope): brief description of what changed"
+```
+**Examples:**
+- `feat(ml): add spatio-temporal target encoding`
+- `fix(map): correct Leaflet tile rendering URL`
+- `docs(readme): update git workflow instructions`
+- `chore(deps): bump React to version 18.3`
+
+### 4. Pushing Changes
+Upload your committed changes to the GitHub repository:
+```bash
+# Push to the main branch on the origin remote
+git push origin main
+```
+
+### 5. Reviewing Git History
+To review the everyday changes and commits:
+```bash
+git log --oneline --graph -n 10
+```
+
 ## Documentation & Evidence Index
 - [Model Card](docs/MODEL_CARD.md): Formal machine learning model card following Mitchell et al. (2019).
 - [Case Study](docs/CASE_STUDY.md): Technical deep-dive on spatial autocorrelation, multiplicative TreeSHAP, and conformal prediction.
